@@ -1,69 +1,59 @@
-# React + TypeScript + Vite
+# Post Message Sandbox
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A sandbox to experiment with browser post-message APIs using Comlink as an abstraction layer.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project provides a testing environment for exploring browser communication patterns using the `postMessage` API through [Comlink](https://github.com/GoogleChromeLabs/comlink), which simplifies cross-context communication by providing a more intuitive RPC-like interface.
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The sandbox is organized into separate experiments, each with its own Vite entry point:
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **experiment-01/**: Basic iframe communication using Comlink
+- **experiment-02/**: Web Worker communication with broker pattern using Comlink
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+Each experiment includes:
+- `index.html` - Main page entry point
+- `main.tsx` - React application setup
+- `child.html` - Child context (iframe/worker)
+- Corresponding TypeScript/React components
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Getting Started
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+3. Navigate to the experiments:
+   - Experiment 01: `http://localhost:5173/experiment-01/`
+   - Experiment 02: `http://localhost:5173/experiment-02/`
+
+## Development Guidelines
+
+- Use Comlink instead of direct `postMessage` API calls
+- Each experiment should be self-contained in its own directory
+- Follow the established pattern for new experiments
+- Assume the Vite dev server runs on port 5173
+
+## Technology Stack
+
+- **Vite** - Build tool and dev server
+- **React** - UI framework
+- **TypeScript** - Type safety
+- **Comlink** - PostMessage abstraction
+- **ESLint** - Code linting
+
+## Experiments
+
+### Experiment 01: Basic Iframe Communication
+Demonstrates basic parent-child iframe communication using Comlink.
+
+### Experiment 02: Web Worker with Broker Pattern
+Shows how to use Web Workers with a broker pattern for more complex communication scenarios.
