@@ -11,7 +11,7 @@ This project provides a testing environment for exploring browser communication 
 The sandbox is organized into separate experiments, each with its own Vite entry point:
 
 - **experiment-01/**: Basic iframe communication using Comlink
-- **experiment-02/**: Web Worker communication with broker pattern using Comlink
+
 
 Each experiment includes:
 - `index.html` - Main page entry point
@@ -33,7 +33,7 @@ Each experiment includes:
 
 3. Navigate to the experiments:
    - Experiment 01: `http://localhost:5173/experiment-01/`
-   - Experiment 02: `http://localhost:5173/experiment-02/`
+
 
 ## Development Guidelines
 
@@ -55,5 +55,3 @@ Each experiment includes:
 ### Experiment 01: Basic Iframe Communication
 Demonstrates basic parent-child iframe communication using Comlink.
 
-### Experiment 02: Web Worker with Broker Pattern
-Shows how to use Web Workers with a broker pattern for more complex communication scenarios.
