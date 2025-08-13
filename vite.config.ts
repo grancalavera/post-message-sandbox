@@ -10,8 +10,7 @@ export default defineConfig({
         main: "index.html",
         "experiment-01": "experiment-01/index.html",
         "experiment-01-child": "experiment-01/child.html",
-        "experiment-02": "experiment-02/index.html",
-        "experiment-02-child": "experiment-02/child.html",
+
       },
     },
   },
