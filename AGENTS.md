@@ -34,6 +34,11 @@ Always use neutral language and just leave instructions, we don't care if an exp
 6. Create corresponding `experiment-XX/sub-page/src/main.tsx`
 7. Vite will auto-discover entries via glob pattern
 
+## Deleting an Experiment
+
+1. Delete the entire experiment directory: `rm -rf experiment-XX/`
+2. No other cleanup needed - vite will auto-discover remaining experiments
+
 ## Stuff you may need to know
 
 - Assume the vite dev server is running on port 5173, if is not running ask me to start it.
