@@ -32,12 +32,14 @@ Always use neutral language and just leave instructions, we don't care if an exp
 4. Create `experiment-XX/src/main.tsx` with React app
 5. For sub-pages, create `experiment-XX/sub-page/index.html` with script reference: `<script type="module" src="./src/main.tsx"></script>`
 6. Create corresponding `experiment-XX/sub-page/src/main.tsx`
-7. Vite will auto-discover entries via glob pattern
+7. Add a link to the experiment in `src/App.tsx` for navigation
+8. Vite will auto-discover entries via glob pattern
 
 ## Deleting an Experiment
 
 1. Delete the entire experiment directory: `rm -rf experiment-XX/`
-2. No other cleanup needed - vite will auto-discover remaining experiments
+2. Remove the experiment link from `src/App.tsx`
+3. No other cleanup needed - vite will auto-discover remaining experiments
 
 ## Stuff you may need to know
 
