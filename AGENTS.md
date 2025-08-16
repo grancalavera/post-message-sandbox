@@ -35,6 +35,18 @@ Always use neutral language and just leave instructions, we don't care if an exp
 7. Add a link to the experiment in `src/App.tsx` for navigation
 8. Vite will auto-discover entries via glob pattern
 
+## Implementing Experiments
+
+1. Implement the experiment functionality according to the README.md specification
+2. Ensure all code uses Comlink instead of direct postMessage APIs
+3. Build the project to verify no TypeScript errors: `npm run build`
+4. Smoke test the experiment manually using puppeteer:
+   - Navigate to the experiment page
+   - Test all interactive functionality (buttons, inputs, window opening)
+   - Verify communication between windows/workers works as expected
+   - Take screenshots to document the working state
+   - Test error scenarios if applicable
+
 ## Deleting an Experiment
 
 1. Delete the entire experiment directory: `rm -rf experiment-XX/`
