@@ -45,3 +45,4 @@ Always use neutral language and just leave instructions, we don't care if an exp
 
 - Assume the vite dev server is running on port 5173, if is not running ask me to start it.
 - If puppeteer fails to launch you may need to create a `./.puppeteer` directory in the root of the project.
+- To create a new directory, use the write tool to create a file within the directory. The directory should be created automatically.
