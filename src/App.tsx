@@ -15,6 +15,12 @@ function App() {
               <span>Communication between windows using MessageChannel API through Comlink</span>
             </a>
           </li>
+          <li>
+            <a href="/experiment-02/" className="experiment-link">
+              <strong>Experiment 02: SharedWorker-brokered MessageChannel</strong>
+              <span>SharedWorker as neutral broker to transfer MessagePort between windows</span>
+            </a>
+          </li>
         </ul>
       </div>
     </div>
