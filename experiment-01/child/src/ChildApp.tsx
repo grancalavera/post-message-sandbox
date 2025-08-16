@@ -1,7 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
 import * as Comlink from 'comlink'
-import './index.css'
 
 interface ChildWindowAPI {
   sendMessage: (message: string) => Promise<string>
@@ -62,8 +60,4 @@ function ChildApp() {
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ChildApp />
-  </React.StrictMode>,
-)
+export default ChildApp
