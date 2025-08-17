@@ -2,7 +2,7 @@ function App() {
   return (
     <section>
       <h1>
-        {"{{EXPERIMENT_NAME}}"}: {"{{EXPERIMENT_DESCRIPTION}}"}
+        {"experiment-02"}: {"client registration"}
       </h1>
       <p>ok computer</p>
     </section>
