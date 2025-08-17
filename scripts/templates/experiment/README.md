@@ -11,17 +11,5 @@ This experiment demonstrates how to use Comlink for [describe the specific use c
 ## Usage
 
 1. Start the dev server: `npm run dev`
-2. Navigate to: http://localhost:5173/{{EXPERIMENT_NAME}}/
+2. Navigate to: <http://localhost:5173/{{EXPERIMENT_NAME}}/>
 3. [Add specific usage instructions]
-
-## Key Features
-
-- Uses Comlink instead of direct postMessage APIs
-- [Add other key features]
-
-## Files
-
-- `index.html` - Main experiment page
-- `src/main.tsx` - React entry point
-- `src/App.tsx` - Main experiment component
-- `src/index.css` - Styles
