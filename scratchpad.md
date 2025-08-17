@@ -4,7 +4,7 @@
 
 ```
 scripts/
-  workbench.js          # Main CLI entry point
+  workbench.ts          # Main CLI entry point (TypeScript)
   templates/            # Template files for new experiments
     experiment/
       index.html
@@ -15,8 +15,9 @@ scripts/
 
 ### Implementation Plan
 
-**1. CLI Entry Point (`scripts/workbench.js`)**
+**1. CLI Entry Point (`scripts/workbench.ts`)**
 
+- Written in TypeScript for type safety and consistency with project
 - Parse command line arguments
 - Handle `create` and `delete` commands
 - Use Node.js fs operations for file/directory manipulation
@@ -47,11 +48,11 @@ scripts/
 
 ```bash
 # Create new experiment (auto-numbered)
-workbench create "MessageChannel Communication"
+npx tsx scripts/workbench.ts create "MessageChannel Communication"
 # Creates experiment-02/ with proper structure
 
 # Delete existing experiment
-workbench delete experiment-01
+npx tsx scripts/workbench.ts delete experiment-01
 # Removes directory and navigation link
 ```
 
@@ -65,7 +66,13 @@ workbench delete experiment-01
 
 ### Package.json Integration
 
-Add script: `"workbench": "node scripts/workbench.js"`
+Add script: `"workbench": "tsx scripts/workbench.ts"`
+
+### Runtime Requirements
+
+- Tool must be written in TypeScript
+- Use `tsx` for execution (TypeScript runner)
+- Ensure type safety throughout the implementation
 
 This design follows the existing patterns, maintains the self-contained experiment structure, and provides a simple batch interface for experiment management.
 
