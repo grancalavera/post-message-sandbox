@@ -53,8 +53,9 @@ Always use neutral language and just leave instructions, we don't care if an exp
 2. Remove the experiment link from `src/App.tsx`
 3. No other cleanup needed - vite will auto-discover remaining experiments
 
-## Stuff you may need to know
+## Stuff you MUST do
 
 - Assume the vite dev server is running on port 5173, if is not running ask me to start it.
 - If puppeteer fails to launch you may need to create a `./.puppeteer` directory in the root of the project.
 - To create a new directory, use the write tool to create a file within the directory. The directory should be created automatically.
+- Run `npm run check` after creating and modifying any files.

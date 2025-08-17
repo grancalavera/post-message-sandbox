@@ -27,7 +27,7 @@ function App() {
     const childWindow = window.open(
       "/experiment-01/child/",
       "childWindow",
-      "width=500,height=600,left=100,top=100,scrollbars=yes,resizable=yes"
+      "width=500,height=600,left=100,top=100,scrollbars=yes,resizable=yes",
     );
 
     if (!childWindow) {

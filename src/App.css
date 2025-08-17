@@ -25,7 +25,9 @@
   border-radius: 8px;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.25s, background-color 0.25s;
+  transition:
+    border-color 0.25s,
+    background-color 0.25s;
 }
 
 .experiment-link:hover {

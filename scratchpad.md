@@ -1,3 +1,76 @@
+## CLI Tool Design: `workbench`
+
+### Core Structure
+
+```
+scripts/
+  workbench.js          # Main CLI entry point
+  templates/            # Template files for new experiments
+    experiment/
+      index.html
+      src/
+        main.tsx
+      README.md
+```
+
+### Implementation Plan
+
+**1. CLI Entry Point (`scripts/workbench.js`)**
+
+- Parse command line arguments
+- Handle `create` and `delete` commands
+- Use Node.js fs operations for file/directory manipulation
+
+**2. Create Command Logic**
+
+- Generate next experiment number by scanning existing `experiment-*` directories
+- Create directory structure from templates
+- Replace placeholders in templates with experiment name/number
+- Update `src/App.tsx` to add navigation link
+- Output success message with experiment URL
+
+**3. Delete Command Logic**
+
+- Validate experiment exists
+- Remove experiment directory
+- Remove navigation link from `src/App.tsx`
+- Output confirmation message
+
+**4. Template System**
+
+- `index.html` template with script reference
+- `main.tsx` template with basic React app structure
+- `README.md` template with experiment description placeholder
+- Use simple string replacement for placeholders like `{{EXPERIMENT_NAME}}`
+
+### Usage Examples
+
+```bash
+# Create new experiment (auto-numbered)
+workbench create "MessageChannel Communication"
+# Creates experiment-02/ with proper structure
+
+# Delete existing experiment
+workbench delete experiment-01
+# Removes directory and navigation link
+```
+
+### Key Features
+
+- Auto-numbering: Scans existing experiments to determine next number
+- Template-based: Consistent structure for all experiments
+- Navigation management: Automatically updates main App.tsx
+- Validation: Checks for existing experiments before create/delete
+- Self-contained: Each experiment can be completely removed
+
+### Package.json Integration
+
+Add script: `"workbench": "node scripts/workbench.js"`
+
+This design follows the existing patterns, maintains the self-contained experiment structure, and provides a simple batch interface for experiment management.
+
+---
+
 # Technical Design: Self-Contained Experiment Structure
 
 ## Current Structure Analysis

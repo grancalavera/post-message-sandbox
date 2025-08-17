@@ -12,8 +12,8 @@ The sandbox is organized into separate experiments, each with its own Vite entry
 
 - **experiment-01/**: Basic iframe communication using Comlink
 
-
 Each experiment includes:
+
 - `index.html` - Main page entry point
 - `main.tsx` - React application setup
 - `child.html` - Child context (iframe/worker)
@@ -22,18 +22,19 @@ Each experiment includes:
 ## Getting Started
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```
 
 3. Navigate to the experiments:
    - Experiment 01: `http://localhost:5173/experiment-01/`
-
 
 ## Development Guidelines
 
@@ -53,5 +54,5 @@ Each experiment includes:
 ## Experiments
 
 ### Experiment 01: Basic Iframe Communication
-Demonstrates basic parent-child iframe communication using Comlink.
 
+Demonstrates basic parent-child iframe communication using Comlink.
