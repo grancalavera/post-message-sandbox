@@ -26,14 +26,23 @@ Always use neutral language and just leave instructions, we don't care if an exp
 
 ## Creating a New Experiment
 
-1. Create experiment directory: `experiment-XX/`
-2. Add `experiment-XX/README.md` explaining what the experiment does
-3. Add `experiment-XX/index.html` with script reference: `<script type="module" src="./src/main.tsx"></script>`
-4. Create `experiment-XX/src/main.tsx` with React app
-5. For sub-pages, create `experiment-XX/sub-page/index.html` with script reference: `<script type="module" src="./src/main.tsx"></script>`
-6. Create corresponding `experiment-XX/sub-page/src/main.tsx`
-7. Add a link to the experiment in `src/App.tsx` for navigation
-8. Vite will auto-discover entries via glob pattern
+Use the workbench CLI tool to create experiments:
+
+```bash
+npm run workbench create "Experiment Description"
+```
+
+This automatically:
+
+- Creates `experiment-XX/` directory with auto-numbered naming
+- Generates all required files from templates (index.html, src/main.tsx, src/App.tsx, src/index.css, README.md)
+- Uses self-contained structure - all files are within the experiment directory
+- Integrates with vite's auto-discovery system
+
+For sub-pages within experiments:
+
+- Create `experiment-XX/sub-page/index.html` with script reference: `<script type="module" src="./src/main.tsx"></script>`
+- Create corresponding `experiment-XX/sub-page/src/main.tsx`
 
 ## Implementing Experiments
 
@@ -49,9 +58,13 @@ Always use neutral language and just leave instructions, we don't care if an exp
 
 ## Deleting an Experiment
 
-1. Delete the entire experiment directory: `rm -rf experiment-XX/`
-2. Remove the experiment link from `src/App.tsx`
-3. No other cleanup needed - vite will auto-discover remaining experiments
+Use the workbench CLI tool to delete experiments:
+
+```bash
+npm run workbench delete experiment-XX
+```
+
+This automatically removes the entire experiment directory. No other cleanup needed - vite will auto-discover remaining experiments and the main App.tsx uses dynamic discovery.
 
 ## Stuff you MUST do
 
