@@ -35,12 +35,33 @@ class ClientRegistryService
   extends BaseService<ClientRegistryContract>
   implements ClientRegistryContract
 {
+  private isRegistered = false;
+  private registration: PromiseWithResolvers<void> | undefined;
+
   constructor(port: MessagePort, clientId: string) {
     super(port, clientId);
   }
 
   async registerClient(): Promise<void> {
-    await this.remote.registerClient(this.clientId);
+    if (this.isRegistered) {
+      return;
+    }
+
+    if (this.registration) {
+      return this.registration.promise;
+    }
+
+    const registration = Promise.withResolvers<void>();
+    this.registration = registration;
+
+    navigator.locks.request(this.clientId, async () => {
+      await this.remote.registerClient(this.clientId);
+      this.isRegistered = true;
+      registration.resolve();
+      return new Promise(() => {});
+    });
+
+    return registration.promise;
   }
 }
 

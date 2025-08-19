@@ -6,7 +6,15 @@ This experiment demonstrates a type-safe RPC system using Comlink with SharedWor
 
 ## Implementation
 
-This experiment demonstrates how to use Comlink for SharedWorker-based RPC communication with automatic client registration.
+This experiment demonstrates how to use Comlink for SharedWorker-based RPC communication with automatic client registration and teardown using the Web Locks API.
+
+**Client Teardown Strategy:**
+The system uses Web Locks API for automatic client lifecycle management:
+
+- **Client-side**: Each client holds a web lock using their unique client ID as the lock name
+- **Worker-side**: The worker periodically attempts to acquire the same locks to detect disconnected clients
+- **Detection mechanism**: If the worker successfully acquires a client's lock, it means that client has disconnected (tab closed)
+- **Cleanup**: Worker removes disconnected clients from registry and immediately releases the acquired lock
 
 **Progress:**
 
@@ -17,7 +25,8 @@ This experiment demonstrates how to use Comlink for SharedWorker-based RPC commu
 - [x] Echo service as proof-of-concept RPC contract
 - [x] Proper TypeScript configuration for WebWorker support
 - [ ] Remote echo service implementation in SharedWorker
-- [ ] Client teardown using web locks
+- [x] Client teardown using web locks (client-side implementation)
+- [ ] Worker-side lock monitoring for client cleanup
 - [ ] Frontend UI to demonstrate client registration and echo functionality
 - [ ] Multiple tab communication examples
 - [ ] Error handling and connection management
