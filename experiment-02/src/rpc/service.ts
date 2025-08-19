@@ -45,11 +45,9 @@ class ClientRegistryService
 }
 
 export const createSharedWorkerService = async <T>(
+  worker: SharedWorker,
   Service: ServiceConstructor<T>
 ): Promise<T> => {
-  const worker = new SharedWorker(new URL("./worker.ts", import.meta.url), {
-    type: "module",
-  });
   const clientId = crypto.randomUUID();
   const registryService = new ClientRegistryService(worker.port, clientId);
   await registryService.registerClient();
