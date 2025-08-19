@@ -16,6 +16,7 @@ This experiment demonstrates how to use Comlink for SharedWorker-based RPC commu
 - [x] Generic service factory for creating SharedWorker-backed services
 - [x] Echo service as proof-of-concept RPC contract
 - [x] Proper TypeScript configuration for WebWorker support
+- [ ] Remote echo service implementation in SharedWorker
 - [ ] Client teardown using web locks
 - [ ] Frontend UI to demonstrate client registration and echo functionality
 - [ ] Multiple tab communication examples

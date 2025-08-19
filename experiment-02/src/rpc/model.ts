@@ -1,22 +1,4 @@
-import * as Comlink from "comlink";
-
-export type ServiceConstructor<TContract> = new (
-  remote: Comlink.Remote<RemoteContract<TContract>>,
-  clientId: string
-) => TContract;
-
-export type RemoteContract<T> = {
-  [K in keyof T]: T[K] extends (...args: infer P) => infer R
-    ? (id: string, ...args: P) => R
-    : never;
-};
-
-export interface ClientRegistryContract {
-  /**
-   * Registers the client. Assumes internally an unique client ID is generated.
-   */
-  registerClient(): Promise<void>;
-}
+import type { RemoteContract } from "./service";
 
 export interface EchoContract {
   /**
@@ -25,7 +7,5 @@ export interface EchoContract {
   echo(message: string): Promise<string>;
 }
 
+// this might not be necessary, maybe this can be written directly in the implementation
 export type RemoteEchoContract = RemoteContract<EchoContract>;
-
-export const wrapRemote = <T>(port: MessagePort) =>
-  Comlink.wrap<RemoteContract<T>>(port);
