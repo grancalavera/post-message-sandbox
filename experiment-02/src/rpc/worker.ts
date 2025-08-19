@@ -1,19 +1,24 @@
-class Worker implements Registerable {
-  private clientId: string;
+import type { ClientRegistryContract } from "./model";
+import * as Comlink from "comlink";
 
-  constructor() {
-    this.clientId = this.generateClientId();
-  }
+interface ClientDescriptor {
+  clientId: string;
+}
 
-  registerClient(): void {
-    // Registration logic here
-  }
+class Worker implements ClientRegistryContract {
+  private clients: Map<string, ClientDescriptor> = new Map();
 
-  getClientId(): string {
-    return this.clientId;
-  }
-
-  private generateClientId(): string {
-    return "client-" + Math.random().toString(36).substr(2, 9);
+  registerClient(clientId: string): void {
+    if (this.clients.has(clientId)) return;
+    this.clients.set(clientId, { clientId });
+    console.log(`Client registered: ${clientId}`);
   }
 }
+
+declare const self: SharedWorkerGlobalScope;
+const worker = new Worker();
+
+self.addEventListener("connect", (event) => {
+  const port = event.ports[0];
+  Comlink.expose(worker, port);
+});
