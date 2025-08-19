@@ -1,7 +1,7 @@
 import * as Comlink from "comlink";
 
 export type ServiceConstructor<TContract> = new (
-  remote: Comlink.Remote<RemoteContract<TContract>>,
+  port: MessagePort,
   clientId: string
 ) => TContract;
 
@@ -10,6 +10,14 @@ export type RemoteContract<T> = {
     ? (id: string, ...args: P) => R
     : never;
 };
+export abstract class BaseService<T> {
+  protected remote: RemoteService<T>;
+  protected clientId: string;
+  constructor(port: MessagePort, clientId: string) {
+    this.remote = remoteService<T>(port);
+    this.clientId = clientId;
+  }
+}
 
 export interface ClientRegistryContract {
   /**
@@ -18,35 +26,21 @@ export interface ClientRegistryContract {
   registerClient(): Promise<void>;
 }
 
-export const wrapRemote = <T>(port: MessagePort): RemoteService<T> =>
+const remoteService = <T>(port: MessagePort): RemoteService<T> =>
   Comlink.wrap<RemoteContract<T>>(port);
 
 export type RemoteService<T> = Comlink.Remote<RemoteContract<T>>;
 
-class ClientRegistryService implements ClientRegistryContract {
-  private remote: Comlink.Remote<RemoteContract<ClientRegistryContract>>;
-  private clientId = crypto.randomUUID();
-
-  constructor(remote: Comlink.Remote<RemoteContract<ClientRegistryContract>>) {
-    this.remote = remote;
+class ClientRegistryService
+  extends BaseService<ClientRegistryContract>
+  implements ClientRegistryContract
+{
+  constructor(port: MessagePort, clientId: string) {
+    super(port, clientId);
   }
 
   async registerClient(): Promise<void> {
     await this.remote.registerClient(this.clientId);
-  }
-
-  getClientId(): string {
-    return this.clientId;
-  }
-}
-
-export abstract class BaseService<T> {
-  protected remote: RemoteService<T>;
-  protected clientId: string;
-
-  constructor(remote: RemoteService<T>, clientId: string) {
-    this.remote = remote;
-    this.clientId = clientId;
   }
 }
 
@@ -56,12 +50,8 @@ export const createSharedWorkerService = async <T>(
   const worker = new SharedWorker(new URL("./worker.ts", import.meta.url), {
     type: "module",
   });
-
-  const registryService = new ClientRegistryService(
-    wrapRemote<ClientRegistryContract>(worker.port)
-  );
-
+  const clientId = crypto.randomUUID();
+  const registryService = new ClientRegistryService(worker.port, clientId);
   await registryService.registerClient();
-
-  return new Service(wrapRemote<T>(worker.port), registryService.getClientId());
+  return new Service(worker.port, clientId);
 };

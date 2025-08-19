@@ -1,13 +1,9 @@
 import { type EchoContract } from "./model";
-import {
-  BaseService,
-  createSharedWorkerService,
-  type RemoteService,
-} from "./service";
+import { BaseService, createSharedWorkerService } from "./service";
 
 class EchoService extends BaseService<EchoContract> implements EchoContract {
-  constructor(remote: RemoteService<EchoContract>, clientId: string) {
-    super(remote, clientId);
+  constructor(port: MessagePort, clientId: string) {
+    super(port, clientId);
   }
 
   async echo(message: string): Promise<string> {
