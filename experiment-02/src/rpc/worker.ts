@@ -10,7 +10,6 @@ const clientRep = (clientId: string): ClientRep => ({ clientId });
 
 class Worker implements RemoteContract<EchoContract & ClientRegistryContract> {
   private clients: Map<string, ClientRep> = new Map();
-  private messageHistory: string[] = [];
 
   async registerClient(clientId: string): Promise<void> {
     if (this.clients.has(clientId)) return;
@@ -33,43 +32,7 @@ class Worker implements RemoteContract<EchoContract & ClientRegistryContract> {
       throw new Error(`Unknown client ${clientId}`);
     }
     console.log(`${clientId} echo "${message}"`);
-
-    // Add message to shared history
-    const timestamp = new Date().toLocaleTimeString();
-    const logMessage = `[${timestamp}] ${clientId.slice(0, 8)}: ${message} → echo: ${message}`;
-    this.messageHistory.push(logMessage);
-
-    // Keep only last 50 messages
-    if (this.messageHistory.length > 50) {
-      this.messageHistory = this.messageHistory.slice(-50);
-    }
-
     return `echo: ${message}`;
-  }
-
-  async getMessages(clientId: string): Promise<string[]> {
-    if (!this.clients.has(clientId)) {
-      throw new Error(`Unknown client ${clientId}`);
-    }
-    return [...this.messageHistory];
-  }
-
-  async broadcast(clientId: string, message: string): Promise<void> {
-    if (!this.clients.has(clientId)) {
-      throw new Error(`Unknown client ${clientId}`);
-    }
-
-    console.log(`${clientId} broadcast "${message}"`);
-
-    // Add broadcast message to shared history
-    const timestamp = new Date().toLocaleTimeString();
-    const logMessage = `[${timestamp}] ${clientId.slice(0, 8)} (broadcast): ${message}`;
-    this.messageHistory.push(logMessage);
-
-    // Keep only last 50 messages
-    if (this.messageHistory.length > 50) {
-      this.messageHistory = this.messageHistory.slice(-50);
-    }
   }
 }
 
