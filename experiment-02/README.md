@@ -28,9 +28,7 @@ The system uses Web Locks API for automatic client lifecycle management:
 - [x] Client teardown using web locks (client-side implementation)
 - [x] Worker-side lock monitoring for client cleanup
 - [x] Frontend UI to demonstrate client registration and echo functionality
-- [ ] Multiple tab communication examples
-- [ ] Error handling and connection management
-- [ ] Service discovery mechanism for multiple service types
+- [x] Multiple tab communication examples
 
 ## Usage
 

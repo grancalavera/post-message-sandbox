@@ -9,6 +9,14 @@ class EchoService extends BaseService<EchoContract> implements EchoContract {
   async echo(message: string): Promise<string> {
     return this.remote.echo(this.clientId, message);
   }
+
+  async getMessages(): Promise<string[]> {
+    return this.remote.getMessages(this.clientId);
+  }
+
+  async broadcast(message: string): Promise<void> {
+    return this.remote.broadcast(this.clientId, message);
+  }
 }
 
 export const echoService = await createSharedWorkerService(
@@ -16,5 +24,5 @@ export const echoService = await createSharedWorkerService(
     type: "module",
     name: "Echo Service",
   }),
-  EchoService
+  EchoService,
 );
