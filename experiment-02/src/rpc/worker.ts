@@ -4,6 +4,7 @@ import type { ClientRegistryContract, RemoteContract } from "./service";
 
 interface ClientRep {
   clientId: string;
+  onEcho?: (message: string) => void;
 }
 
 const clientRep = (clientId: string): ClientRep => ({ clientId });
@@ -18,21 +19,46 @@ class Worker implements RemoteContract<EchoContract & ClientRegistryContract> {
     this.clients.set(clientId, clientRep(clientId));
 
     navigator.locks.request(clientId, async () => {
-      this.unregisterClient(clientId);
+      console.log("unregisterClient", clientId);
+      this.clients.delete(clientId);
     });
   }
 
-  private async unregisterClient(clientId: string): Promise<void> {
-    console.log("unregisterClient", clientId);
-    this.clients.delete(clientId);
+  async echo(clientId: string, message: string): Promise<string> {
+    this.getClient(clientId);
+    const echoedMessage = `echo: ${message}`;
+    console.log(clientId, echoedMessage);
+    this.broadcastEcho(echoedMessage);
+    return echoedMessage;
   }
 
-  async echo(clientId: string, message: string): Promise<string> {
-    if (!this.clients.has(clientId)) {
+  subscribeEcho(clientId: string, callback: (message: string) => void): void {
+    const client = this.getClient(clientId);
+    console.log(`subscribeEcho: ${clientId}`);
+    this.clients.set(clientId, {
+      ...client,
+      onEcho: callback,
+    });
+  }
+
+  unsubscribeEcho(clientId: string): void {
+    const client = this.getClient(clientId);
+    console.log(`unsubscribeEcho: ${clientId}`);
+    this.clients.set(clientId, { ...client, onEcho: undefined });
+  }
+
+  private getClient(clientId: string) {
+    const client = this.clients.get(clientId);
+    if (!client) {
       throw new Error(`Unknown client ${clientId}`);
     }
-    console.log(`${clientId} echo "${message}"`);
-    return `echo: ${message}`;
+    return client;
+  }
+
+  private broadcastEcho(message: string): void {
+    this.clients.forEach((client) => {
+      client.onEcho?.(message);
+    });
   }
 }
 

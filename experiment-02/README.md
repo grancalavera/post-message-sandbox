@@ -8,6 +8,13 @@ This experiment demonstrates a type-safe RPC system using Comlink with SharedWor
 
 This experiment demonstrates how to use Comlink for SharedWorker-based RPC communication with automatic client registration and teardown using the Web Locks API.
 
+**Key Features:**
+
+- Type-safe RPC contracts with automatic client ID injection
+- Cross-tab communication through subscription-based broadcasting
+- Automatic client lifecycle management using Web Locks API
+- Generic service factory pattern for extensible service architectures
+
 **Client Teardown Strategy:**
 The system uses Web Locks API for automatic client lifecycle management:
 
@@ -28,7 +35,8 @@ The system uses Web Locks API for automatic client lifecycle management:
 - [x] Client teardown using web locks (client-side implementation)
 - [x] Worker-side lock monitoring for client cleanup
 - [x] Frontend UI to demonstrate client registration and echo functionality
-- [ ] Multiple tab communication examples
+- [x] Multi-tab communication with subscription-based broadcasting
+- [x] Echo service subscription system for cross-tab messaging
 - [ ] Error handling and connection management
 - [ ] Service discovery mechanism for multiple service types
 
@@ -37,4 +45,5 @@ The system uses Web Locks API for automatic client lifecycle management:
 1. Start the dev server: `npm run dev`
 2. Navigate to: <http://localhost:5173/experiment-02/>
 3. Open multiple tabs to test cross-tab communication
-4. Use the echo service to send messages between clients
+4. Click "echo" button to send messages that broadcast to all tabs
+5. Check browser console to see echo messages received across tabs

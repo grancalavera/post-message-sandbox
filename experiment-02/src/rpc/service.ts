@@ -2,7 +2,7 @@ import * as Comlink from "comlink";
 
 export type ServiceConstructor<TContract> = new (
   port: MessagePort,
-  clientId: string
+  clientId: string,
 ) => TContract;
 
 export type RemoteContract<T> = {
@@ -68,7 +68,7 @@ class ClientRegistryService
 export const createSharedWorkerService = async <T>(
   worker: SharedWorker,
   Service: ServiceConstructor<T>,
-  getClientId = () => crypto.randomUUID()
+  getClientId = () => crypto.randomUUID(),
 ): Promise<T> => {
   const clientId = getClientId();
   const registryService = new ClientRegistryService(worker.port, clientId);
