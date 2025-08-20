@@ -37,13 +37,23 @@ The system uses Web Locks API for automatic client lifecycle management:
 - [x] Frontend UI to demonstrate client registration and echo functionality
 - [x] Multi-tab communication with subscription-based broadcasting
 - [x] Echo service subscription system for cross-tab messaging
-- [ ] Error handling and connection management
-- [ ] Service discovery mechanism for multiple service types
+- [x] An UI explaining how the experiment works and demonstrates subscriptions and request response. Don't add anything to the RPC layer.
 
 ## Usage
 
 1. Start the dev server: `npm run dev`
 2. Navigate to: <http://localhost:5173/experiment-02/>
-3. Open multiple tabs to test cross-tab communication
-4. Click "echo" button to send messages that broadcast to all tabs
-5. Check browser console to see echo messages received across tabs
+3. **Request-Response Demo:**
+   - Enter a custom message in the input field
+   - Click "Send Echo Request" to test RPC calls
+   - View responses in the Response Log panel
+4. **Subscription Demo:**
+   - Click "Subscribe to Echo Messages" to enable cross-tab communication
+   - Open multiple tabs with the same experiment
+   - Send echo requests from any tab and watch messages appear in all subscribed tabs
+5. **Multi-Tab Testing:**
+   - Open the experiment in multiple browser tabs
+   - Subscribe to messages in each tab
+   - Send requests from different tabs to see real-time broadcasting
+   - Close tabs to observe automatic client cleanup via Web Locks API
+6. **Debugging:** Check browser console for additional client registration and worker lifecycle logging
