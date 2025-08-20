@@ -1,21 +1,43 @@
-import type { ClientRegistryContract } from "./model";
 import * as Comlink from "comlink";
+import type { EchoContract } from "./model";
+import type { ClientRegistryContract, RemoteContract } from "./service";
 
-interface ClientDescriptor {
+interface ClientRep {
   clientId: string;
 }
 
-class Worker implements ClientRegistryContract {
-  private clients: Map<string, ClientDescriptor> = new Map();
+const clientRep = (clientId: string): ClientRep => ({ clientId });
 
-  registerClient(clientId: string): void {
+class Worker implements RemoteContract<EchoContract & ClientRegistryContract> {
+  private clients: Map<string, ClientRep> = new Map();
+
+  async registerClient(clientId: string): Promise<void> {
     if (this.clients.has(clientId)) return;
-    this.clients.set(clientId, { clientId });
-    console.log(`Client registered: ${clientId}`);
+
+    console.log("registerClient", clientId);
+    this.clients.set(clientId, clientRep(clientId));
+
+    navigator.locks.request(clientId, async () => {
+      this.unregisterClient(clientId);
+    });
+  }
+
+  private async unregisterClient(clientId: string): Promise<void> {
+    console.log("unregisterClient", clientId);
+    this.clients.delete(clientId);
+  }
+
+  async echo(clientId: string, message: string): Promise<string> {
+    if (!this.clients.has(clientId)) {
+      throw new Error(`Unknown client ${clientId}`);
+    }
+    console.log(`${clientId} echo "${message}"`);
+    return `echo: ${message}`;
   }
 }
 
 declare const self: SharedWorkerGlobalScope;
+
 const worker = new Worker();
 
 self.addEventListener("connect", (event) => {

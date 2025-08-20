@@ -1,10 +1,16 @@
+import { echoService } from "./rpc/client";
+
 function App() {
+  const sendEcho = async () => {
+    const response = await echoService.echo("ok computer");
+    console.log(`response: "${response}"`);
+  };
   return (
     <section>
       <h1>
         {"experiment-02"}: {"client registration"}
       </h1>
-      <p>ok computer</p>
+      <button onClick={() => sendEcho()}>echo</button>
     </section>
   );
 }

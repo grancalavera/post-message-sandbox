@@ -14,6 +14,7 @@ class EchoService extends BaseService<EchoContract> implements EchoContract {
 export const echoService = await createSharedWorkerService(
   new SharedWorker(new URL("./worker.ts", import.meta.url), {
     type: "module",
+    name: "Echo Service",
   }),
   EchoService
 );
