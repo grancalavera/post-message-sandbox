@@ -1,6 +1,6 @@
 import * as Comlink from "comlink";
 
-export type ServiceConstructor<TContract> = new (
+export type ClientConstructor<TContract> = new (
   port: MessagePort,
   clientId: string,
 ) => TContract;
@@ -11,7 +11,7 @@ export type RemoteContract<T> = {
     : never;
 };
 
-export type RemoteService<T> = Comlink.Remote<RemoteContract<T>>;
+export type RemoteWorker<T> = Comlink.Remote<RemoteContract<T>>;
 
 export interface ClientRegistryContract {
   /**

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { echoService } from "./shared-worker/echo";
+import { echoClient } from "./shared-worker/echo";
 
 function App() {
   const [messages, setMessages] = useState<string[]>([]);
@@ -9,7 +9,7 @@ function App() {
 
   const sendEcho = async () => {
     try {
-      const response = await echoService.echo(echoInput);
+      const response = await echoClient.echo(echoInput);
       setResponseLog((prev) => [
         `Response: "${response}"`,
         ...prev.slice(0, 4),
@@ -21,10 +21,10 @@ function App() {
 
   const toggleSubscription = () => {
     if (isSubscribed) {
-      echoService.unsubscribeEcho();
+      echoClient.unsubscribeEcho();
       setIsSubscribed(false);
     } else {
-      echoService.subscribeEcho((message) => {
+      echoClient.subscribeEcho((message) => {
         setMessages((prev) => [
           `${new Date().toLocaleTimeString()}: ${message}`,
           ...prev.slice(0, 9),
@@ -72,7 +72,7 @@ function App() {
           </li>
         </ul>
         <p>
-          <strong>Client ID:</strong> <code>{echoService.getClientId()}</code>
+          <strong>Client ID:</strong> <code>{echoClient.getClientId()}</code>
         </p>
       </div>
 

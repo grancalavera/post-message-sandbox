@@ -1,9 +1,9 @@
-import { BaseService } from "../core/client";
+import { BaseClient } from "../core/client";
 import type { EchoContract } from "./contract";
 import * as Comlink from "comlink";
 
-export class EchoService
-  extends BaseService<EchoContract>
+export class EchoClient
+  extends BaseClient<EchoContract>
   implements EchoContract
 {
   constructor(port: MessagePort, clientId: string) {

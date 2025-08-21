@@ -1,31 +1,18 @@
 import * as Comlink from "comlink";
-import { BaseWorker } from "../core/worker";
+import { BaseWorker, createClientRep, type WithClientId } from "../core/worker";
 import type { EchoContract } from "./contract";
 import type { ClientRegistryContract, RemoteContract } from "../core/types";
 
-interface EchoClientRep {
-  clientId: string;
+interface EchoClientRep extends WithClientId {
   onEcho?: (message: string) => void;
 }
 
 class EchoWorker
-  extends BaseWorker
+  extends BaseWorker<EchoClientRep>
   implements RemoteContract<EchoContract & ClientRegistryContract>
 {
-  private echoClients: Map<string, EchoClientRep> = new Map();
-
-  async registerClient(clientId: string): Promise<void> {
-    if (this.clients.has(clientId)) return;
-
-    console.log("registerClient", clientId);
-    this.clients.set(clientId, { clientId });
-    this.echoClients.set(clientId, { clientId });
-
-    navigator.locks.request(clientId, async () => {
-      console.log("unregisterClient", clientId);
-      this.clients.delete(clientId);
-      this.echoClients.delete(clientId);
-    });
+  constructor() {
+    super(createClientRep);
   }
 
   async echo(clientId: string, message: string): Promise<string> {
@@ -37,30 +24,22 @@ class EchoWorker
   }
 
   subscribeEcho(clientId: string, callback: (message: string) => void): void {
-    const client = this.getEchoClient(clientId);
+    const client = this.getClient(clientId);
     console.log(`subscribeEcho: ${clientId}`);
-    this.echoClients.set(clientId, {
+    this.clients.set(clientId, {
       ...client,
       onEcho: callback,
     });
   }
 
   unsubscribeEcho(clientId: string): void {
-    const client = this.getEchoClient(clientId);
+    const client = this.getClient(clientId);
     console.log(`unsubscribeEcho: ${clientId}`);
-    this.echoClients.set(clientId, { ...client, onEcho: undefined });
-  }
-
-  private getEchoClient(clientId: string): EchoClientRep {
-    const client = this.echoClients.get(clientId);
-    if (!client) {
-      throw new Error(`Unknown echo client ${clientId}`);
-    }
-    return client;
+    this.clients.set(clientId, { ...client, onEcho: undefined });
   }
 
   private broadcastEcho(message: string): void {
-    this.echoClients.forEach((client) => {
+    this.clients.forEach((client) => {
       client.onEcho?.(message);
     });
   }

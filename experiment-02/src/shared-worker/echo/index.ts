@@ -1,13 +1,10 @@
-import { createSharedWorkerService } from "../core/client";
-import { EchoService } from "./client";
+import { createClient } from "../core/client";
+import { EchoClient } from "./client";
 
-export const echoService = await createSharedWorkerService(
+export const echoClient = await createClient(
   new SharedWorker(new URL("./worker.ts", import.meta.url), {
     type: "module",
-    name: "Echo Service",
+    name: "Echo",
   }),
-  EchoService,
+  EchoClient,
 );
-
-export type { EchoContract } from "./contract";
-export { EchoService } from "./client";
