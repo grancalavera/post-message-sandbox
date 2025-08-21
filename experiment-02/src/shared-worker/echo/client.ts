@@ -1,8 +1,11 @@
-import { type EchoContract } from "./model";
-import { BaseService, createSharedWorkerService } from "./service";
+import { BaseService } from "../core/client";
+import type { EchoContract } from "./contract";
 import * as Comlink from "comlink";
 
-class EchoService extends BaseService<EchoContract> implements EchoContract {
+export class EchoService
+  extends BaseService<EchoContract>
+  implements EchoContract
+{
   constructor(port: MessagePort, clientId: string) {
     super(port, clientId);
   }
@@ -19,11 +22,3 @@ class EchoService extends BaseService<EchoContract> implements EchoContract {
     this.remote.unsubscribeEcho(this.clientId);
   }
 }
-
-export const echoService = await createSharedWorkerService(
-  new SharedWorker(new URL("./worker.ts", import.meta.url), {
-    type: "module",
-    name: "Echo Service",
-  }),
-  EchoService,
-);

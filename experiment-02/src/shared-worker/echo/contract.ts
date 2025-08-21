@@ -1,4 +1,4 @@
-import type { RemoteContract } from "./service";
+import type { RemoteContract } from "../core/types";
 
 export interface EchoContract {
   /**
@@ -18,5 +18,4 @@ export interface EchoContract {
   unsubscribeEcho(): void;
 }
 
-// this might not be necessary, maybe this can be written directly in the implementation
 export type RemoteEchoContract = RemoteContract<EchoContract>;

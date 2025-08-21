@@ -39,18 +39,6 @@ The system uses Web Locks API for automatic client lifecycle management:
 - [x] Echo service subscription system for cross-tab messaging
 - [x] An UI explaining how the experiment works and demonstrates subscriptions and request response. Don't add anything to the RPC layer.
 
-**Code Restructuring Tasks:**
-
-- [ ] Move core types from `rpc/service.ts` to `shared-worker/core/types.ts`
-- [ ] Move client utilities from `rpc/service.ts` to `shared-worker/core/client.ts`
-- [ ] Extract reusable worker utilities to `shared-worker/core/worker.ts`
-- [ ] Move EchoContract from `rpc/model.ts` to `shared-worker/echo/contract.ts`
-- [ ] Create `shared-worker/echo/client.ts` implementation
-- [ ] Move echo worker implementation to `shared-worker/echo/worker.ts`
-- [ ] Create `shared-worker/echo/index.ts` public API
-- [ ] Update all imports throughout the experiment to use new structure
-- [ ] Remove old `rpc/` directory files after restructuring
-
 ## Code Organization
 
 The experiment follows a modular structure for the SharedWorker RPC system:

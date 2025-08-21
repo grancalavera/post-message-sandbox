@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { echoService } from "./rpc/client";
+import { echoService } from "./shared-worker/echo";
 
 function App() {
   const [messages, setMessages] = useState<string[]>([]);

@@ -1,26 +1,30 @@
 import * as Comlink from "comlink";
-import type { EchoContract } from "./model";
-import type { ClientRegistryContract, RemoteContract } from "./service";
+import { BaseWorker } from "../core/worker";
+import type { EchoContract } from "./contract";
+import type { ClientRegistryContract, RemoteContract } from "../core/types";
 
-interface ClientRep {
+interface EchoClientRep {
   clientId: string;
   onEcho?: (message: string) => void;
 }
 
-const clientRep = (clientId: string): ClientRep => ({ clientId });
-
-class Worker implements RemoteContract<EchoContract & ClientRegistryContract> {
-  private clients: Map<string, ClientRep> = new Map();
+class EchoWorker
+  extends BaseWorker
+  implements RemoteContract<EchoContract & ClientRegistryContract>
+{
+  private echoClients: Map<string, EchoClientRep> = new Map();
 
   async registerClient(clientId: string): Promise<void> {
     if (this.clients.has(clientId)) return;
 
     console.log("registerClient", clientId);
-    this.clients.set(clientId, clientRep(clientId));
+    this.clients.set(clientId, { clientId });
+    this.echoClients.set(clientId, { clientId });
 
     navigator.locks.request(clientId, async () => {
       console.log("unregisterClient", clientId);
       this.clients.delete(clientId);
+      this.echoClients.delete(clientId);
     });
   }
 
@@ -33,30 +37,30 @@ class Worker implements RemoteContract<EchoContract & ClientRegistryContract> {
   }
 
   subscribeEcho(clientId: string, callback: (message: string) => void): void {
-    const client = this.getClient(clientId);
+    const client = this.getEchoClient(clientId);
     console.log(`subscribeEcho: ${clientId}`);
-    this.clients.set(clientId, {
+    this.echoClients.set(clientId, {
       ...client,
       onEcho: callback,
     });
   }
 
   unsubscribeEcho(clientId: string): void {
-    const client = this.getClient(clientId);
+    const client = this.getEchoClient(clientId);
     console.log(`unsubscribeEcho: ${clientId}`);
-    this.clients.set(clientId, { ...client, onEcho: undefined });
+    this.echoClients.set(clientId, { ...client, onEcho: undefined });
   }
 
-  private getClient(clientId: string) {
-    const client = this.clients.get(clientId);
+  private getEchoClient(clientId: string): EchoClientRep {
+    const client = this.echoClients.get(clientId);
     if (!client) {
-      throw new Error(`Unknown client ${clientId}`);
+      throw new Error(`Unknown echo client ${clientId}`);
     }
     return client;
   }
 
   private broadcastEcho(message: string): void {
-    this.clients.forEach((client) => {
+    this.echoClients.forEach((client) => {
       client.onEcho?.(message);
     });
   }
@@ -64,7 +68,7 @@ class Worker implements RemoteContract<EchoContract & ClientRegistryContract> {
 
 declare const self: SharedWorkerGlobalScope;
 
-const worker = new Worker();
+const worker = new EchoWorker();
 
 self.addEventListener("connect", (event) => {
   const port = event.ports[0];

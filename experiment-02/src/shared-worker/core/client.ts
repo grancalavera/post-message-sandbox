@@ -1,15 +1,13 @@
 import * as Comlink from "comlink";
+import type {
+  ServiceConstructor,
+  RemoteContract,
+  RemoteService,
+  ClientRegistryContract,
+} from "./types";
 
-export type ServiceConstructor<TContract> = new (
-  port: MessagePort,
-  clientId: string
-) => TContract;
-
-export type RemoteContract<T> = {
-  [K in keyof T]: T[K] extends (...args: infer P) => infer R
-    ? (id: string, ...args: P) => R
-    : never;
-};
+const remoteService = <T>(port: MessagePort): RemoteService<T> =>
+  Comlink.wrap<RemoteContract<T>>(port);
 
 export abstract class BaseService<T> {
   protected remote: RemoteService<T>;
@@ -23,18 +21,6 @@ export abstract class BaseService<T> {
     return this.clientId;
   }
 }
-
-export interface ClientRegistryContract {
-  /**
-   * Registers the client. Assumes internally an unique client ID is generated.
-   */
-  registerClient(): Promise<void>;
-}
-
-const remoteService = <T>(port: MessagePort): RemoteService<T> =>
-  Comlink.wrap<RemoteContract<T>>(port);
-
-export type RemoteService<T> = Comlink.Remote<RemoteContract<T>>;
 
 class ClientRegistryService
   extends BaseService<ClientRegistryContract>
@@ -73,7 +59,7 @@ class ClientRegistryService
 export const createSharedWorkerService = async <T>(
   worker: SharedWorker,
   Service: ServiceConstructor<T>,
-  getClientId = () => crypto.randomUUID()
+  getClientId = () => crypto.randomUUID(),
 ): Promise<T> => {
   const clientId = getClientId();
   const registryService = new ClientRegistryService(worker.port, clientId);
