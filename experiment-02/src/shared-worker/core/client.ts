@@ -59,7 +59,7 @@ class ClientRegistryService
 export const createClient = async <T>(
   worker: SharedWorker,
   Service: ClientConstructor<T>,
-  getClientId = () => crypto.randomUUID()
+  getClientId = () => crypto.randomUUID(),
 ): Promise<T> => {
   const clientId = getClientId();
   const registryService = new ClientRegistryService(worker.port, clientId);

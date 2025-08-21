@@ -2,7 +2,7 @@ import * as Comlink from "comlink";
 
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
-  clientId: string
+  clientId: string,
 ) => TContract;
 
 export type WorkerContract<T> = {
