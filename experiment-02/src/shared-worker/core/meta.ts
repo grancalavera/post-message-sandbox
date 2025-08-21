@@ -4,12 +4,9 @@ type ArgsToParams<Args> = Args extends void
   ? []
   : Args extends readonly unknown[]
     ? Args
-    : never;
+    : [Args];
 
-export type Query<
-  Args extends readonly unknown[] | void = void,
-  Response = void,
-> = {
+export type Query<Args = void, Response = void> = {
   client: (...args: ArgsToParams<Args>) => Promise<Response>;
   worker: (
     clientId: string,
@@ -18,10 +15,7 @@ export type Query<
   ) => Promise<Response>;
 };
 
-export type Mutation<
-  Args extends readonly unknown[] | void = void,
-  Result = void,
-> = {
+export type Mutation<Args = void, Result = void> = {
   client: (...args: ArgsToParams<Args>) => Promise<Result>;
   worker: (
     clientId: string,
@@ -32,10 +26,7 @@ export type Mutation<
 
 export type Unsubscribe = () => void;
 
-export type Subscription<
-  Args extends readonly unknown[] | void = void,
-  Update = void,
-> = {
+export type Subscription<Args = void, Update = void> = {
   client: (
     ...args: [...ArgsToParams<Args>, callback: (value: Update) => void]
   ) => Unsubscribe;
