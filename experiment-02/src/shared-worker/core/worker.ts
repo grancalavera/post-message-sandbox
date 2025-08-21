@@ -14,10 +14,10 @@ export abstract class BaseWorker<T extends WithClientId = WithClientId> {
     this.createClientRep = createClientRep;
   }
 
-  async registerClient(clientId: string): Promise<void> {
+  async registerClient(clientId: string, correlationId: string): Promise<void> {
     if (this.clients.has(clientId)) return;
 
-    console.log("registerClient", clientId);
+    console.log("registerClient", clientId, correlationId);
     this.clients.set(clientId, this.createClientRep(clientId));
 
     navigator.locks.request(clientId, async () => {

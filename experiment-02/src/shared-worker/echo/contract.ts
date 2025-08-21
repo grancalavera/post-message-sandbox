@@ -1,17 +1,9 @@
-export interface EchoContract {
-  /**
-   * Echoes the message back to the client.
-   */
-  echo(message: string): Promise<string>;
+import type { Contract, Mutation, Subscription } from "../core/meta";
 
-  /**
-   * Subscribes to all echo messages.
-   * @param callback
-   */
-  subscribeEcho(callback: (message: string) => void): void;
+type EchoContract = Contract<{
+  echo: Mutation<string, string>;
+  subscribeEcho: Subscription<void, string>;
+}>;
 
-  /**
-   * Unsubscribes from all echo messages.
-   */
-  unsubscribeEcho(): void;
-}
+export type EchoWorkerContract = EchoContract["worker"];
+export type EchoClientContract = EchoContract["client"];

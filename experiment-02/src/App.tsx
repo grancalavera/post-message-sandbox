@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { echoClient } from "./shared-worker/echo";
+import type { Unsubscribe } from "./shared-worker/core/meta";
 
 function App() {
   const [messages, setMessages] = useState<string[]>([]);
   const [echoInput, setEchoInput] = useState("Hello World");
   const [responseLog, setResponseLog] = useState<string[]>([]);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [unsubscribe, setUnsubscribe] = useState<Unsubscribe | null>(null);
+
+  const isSubscribed = unsubscribe !== null;
 
   const sendEcho = async () => {
     try {
@@ -20,18 +23,19 @@ function App() {
   };
 
   const toggleSubscription = () => {
-    if (isSubscribed) {
-      echoClient.unsubscribeEcho();
-      setIsSubscribed(false);
-    } else {
-      echoClient.subscribeEcho((message) => {
-        setMessages((prev) => [
-          `${new Date().toLocaleTimeString()}: ${message}`,
-          ...prev.slice(0, 9),
-        ]);
-      });
-      setIsSubscribed(true);
-    }
+    setUnsubscribe((prev) => {
+      if (prev) {
+        prev();
+        return null;
+      } else {
+        return echoClient.subscribeEcho((message) => {
+          setMessages((prev) => [
+            `${new Date().toLocaleTimeString()}: ${message}`,
+            ...prev.slice(0, 9),
+          ]);
+        });
+      }
+    });
   };
 
   return (

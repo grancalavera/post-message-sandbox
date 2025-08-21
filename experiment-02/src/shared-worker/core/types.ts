@@ -1,21 +1,16 @@
 import * as Comlink from "comlink";
+import type { Contract, Mutation } from "./meta";
 
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
   clientId: string,
 ) => TContract;
 
-export type WorkerContract<T> = {
-  [K in keyof T]: T[K] extends (...args: infer P) => infer R
-    ? (id: string, ...args: P) => R
-    : never;
-};
+export type RemoteWorker<T> = Comlink.Remote<T>;
 
-export type RemoteWorker<T> = Comlink.Remote<WorkerContract<T>>;
+type RegistryContract = Contract<{
+  registerClient: Mutation;
+}>;
 
-export interface ClientRegistryContract {
-  /**
-   * Registers the client. Assumes internally an unique client ID is generated.
-   */
-  registerClient(): Promise<void>;
-}
+export type RegistryWorkerContract = RegistryContract["worker"];
+export type RegistryClientContract = RegistryContract["client"];

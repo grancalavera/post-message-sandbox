@@ -1,46 +1,67 @@
 import * as Comlink from "comlink";
 import { BaseWorker, createClientRep, type WithClientId } from "../core/worker";
-import type { EchoContract } from "./contract";
-import type { ClientRegistryContract, WorkerContract } from "../core/types";
+import type { EchoWorkerContract } from "./contract";
+import type { RegistryWorkerContract } from "../core/types";
 
 interface EchoClientRep extends WithClientId {
   onEcho?: (message: string) => void;
 }
 
-class EchoWorker
-  extends BaseWorker<EchoClientRep>
-  implements WorkerContract<EchoContract & ClientRegistryContract>
-{
+type CombinedContract = EchoWorkerContract & RegistryWorkerContract;
+
+class EchoWorker extends BaseWorker<EchoClientRep> implements CombinedContract {
   constructor() {
     super(createClientRep);
   }
 
-  async echo(clientId: string, message: string): Promise<string> {
+  async echo(
+    clientId: string,
+    correlationId: string,
+    message: string
+  ): Promise<string> {
     this.getClient(clientId);
     const echoedMessage = `echo: ${message}`;
-    console.log(clientId, echoedMessage);
+    console.log(clientId, correlationId, echoedMessage);
     this.broadcastEcho(echoedMessage);
     return echoedMessage;
   }
 
-  subscribeEcho(clientId: string, callback: (message: string) => void): void {
+  subscribeEcho_subscribe(
+    clientId: string,
+    correlationId: string,
+    callback: (message: string) => void
+  ): void {
     const client = this.getClient(clientId);
-    console.log(`subscribeEcho: ${clientId}`);
+    console.log("subscribeEcho", clientId, correlationId);
     this.clients.set(clientId, {
       ...client,
       onEcho: callback,
     });
   }
 
-  unsubscribeEcho(clientId: string): void {
+  subscribeEcho_unsubscribe(clientId: string, correlationId: string): void {
     const client = this.getClient(clientId);
-    console.log(`unsubscribeEcho: ${clientId}`);
+    console.log("unsubscribeEcho", clientId, correlationId);
     this.clients.set(clientId, { ...client, onEcho: undefined });
   }
 
+  async registerClient(clientId: string, correlationId: string): Promise<void> {
+    if (this.clients.has(clientId)) return;
+
+    console.log("registerClient", clientId, correlationId);
+    this.clients.set(clientId, this.createClientRep(clientId));
+
+    navigator.locks.request(clientId, async () => {
+      console.log("unregisterClient", clientId);
+      this.clients.delete(clientId);
+    });
+  }
+
   private broadcastEcho(message: string): void {
-    this.clients.forEach((client) => {
-      client.onEcho?.(message);
+    this.clients.forEach(({ clientId, onEcho }) => {
+      if (!onEcho) return;
+      console.log("broadcastEcho", clientId, message);
+      onEcho?.(message);
     });
   }
 }
