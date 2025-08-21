@@ -1,7 +1,7 @@
 import * as Comlink from "comlink";
 import { BaseWorker, createClientRep, type WithClientId } from "../core/worker";
 import type { EchoContract } from "./contract";
-import type { ClientRegistryContract, RemoteContract } from "../core/types";
+import type { ClientRegistryContract, WorkerContract } from "../core/types";
 
 interface EchoClientRep extends WithClientId {
   onEcho?: (message: string) => void;
@@ -9,7 +9,7 @@ interface EchoClientRep extends WithClientId {
 
 class EchoWorker
   extends BaseWorker<EchoClientRep>
-  implements RemoteContract<EchoContract & ClientRegistryContract>
+  implements WorkerContract<EchoContract & ClientRegistryContract>
 {
   constructor() {
     super(createClientRep);

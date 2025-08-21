@@ -1,5 +1,3 @@
-import type { RemoteContract } from "../core/types";
-
 export interface EchoContract {
   /**
    * Echoes the message back to the client.
@@ -17,5 +15,3 @@ export interface EchoContract {
    */
   unsubscribeEcho(): void;
 }
-
-export type RemoteEchoContract = RemoteContract<EchoContract>;
