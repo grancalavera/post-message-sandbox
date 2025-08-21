@@ -1,18 +1,17 @@
-import type { Contract, Mutation, Subscription } from "../core/meta";
-
-export type EchoContract = Contract<{
+export interface EchoContract {
   /**
    * Echoes the message back to the client.
    */
-  echo: Mutation<string, string>;
+  echo(message: string): Promise<string>;
+
   /**
    * Subscribes to all echo messages.
    * @param callback
    */
-  subscribeEcho: Subscription<void, string>;
+  subscribeEcho(callback: (message: string) => void): void;
 
-  keepAlive: Mutation;
-}>;
-
-type A = EchoContract["client"];
-type B = EchoContract["worker"];
+  /**
+   * Unsubscribes from all echo messages.
+   */
+  unsubscribeEcho(): void;
+}

@@ -4,7 +4,7 @@ type ArgsToParams<Args> = Args extends void
   ? []
   : Args extends readonly unknown[]
     ? Args
-    : [Args];
+    : [value: Args];
 
 export type Query<Args = void, Response = void> = {
   client: (...args: ArgsToParams<Args>) => Promise<Response>;
