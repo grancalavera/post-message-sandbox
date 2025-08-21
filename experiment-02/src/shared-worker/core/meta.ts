@@ -69,3 +69,16 @@ export type WorkerContract<T> = {
     ? Unsubscribe
     : never;
 };
+
+export type Contract<
+  T extends Record<
+    string,
+    { client: unknown } & (
+      | { worker: unknown }
+      | { worker_subscribe: unknown; worker_unsubscribe: unknown }
+    )
+  >,
+> = {
+  client: ClientContract<T>;
+  worker: WorkerContract<T>;
+};
