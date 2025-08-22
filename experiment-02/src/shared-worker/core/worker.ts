@@ -1,29 +1,24 @@
 import { Observable, Subscription } from "rxjs";
 
-export interface ClientRep {
+interface ClientRep {
   clientId: string;
   eachSubscription: Map<string, Subscription>;
   allSubscriptions: Subscription;
 }
 
-export const createClientRep = (clientId: string): ClientRep => ({
+const createClientRep = (clientId: string): ClientRep => ({
   clientId,
   eachSubscription: new Map(),
   allSubscriptions: new Subscription(),
 });
 
-export abstract class BaseWorker<T extends ClientRep = ClientRep> {
-  protected clients: Map<string, T> = new Map();
-  protected createClientRep: (clientId: string) => T;
-
-  constructor(createClientRep: (clientId: string) => T) {
-    this.createClientRep = createClientRep;
-  }
+export abstract class BaseWorker {
+  protected clients: Map<string, ClientRep> = new Map();
 
   async registerClient(clientId: string, correlationId: string): Promise<void> {
     if (this.clients.has(clientId)) return;
     console.log("registerClient", clientId, correlationId);
-    this.clients.set(clientId, this.createClientRep(clientId));
+    this.clients.set(clientId, createClientRep(clientId));
     navigator.locks.request(clientId, async () => {
       this.unregisterClient(clientId);
     });
@@ -62,7 +57,7 @@ export abstract class BaseWorker<T extends ClientRep = ClientRep> {
     client.eachSubscription.delete(correlationId);
   }
 
-  protected getClient(clientId: string): T {
+  protected getClient(clientId: string): ClientRep {
     const client = this.clients.get(clientId);
     if (!client) {
       throw new Error(`Unknown client ${clientId}`);

@@ -6,9 +6,8 @@ function App() {
   const [messages, setMessages] = useState<string[]>([]);
   const [echoInput, setEchoInput] = useState("Hello World");
   const [responseLog, setResponseLog] = useState<string[]>([]);
-  const [unsubscribe, setUnsubscribe] = useState<Unsubscribe | null>(null);
-
-  const isSubscribed = unsubscribe !== null;
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [unsubscribe, setUnsubscribe] = useState<Unsubscribe>();
 
   const sendEcho = async () => {
     try {
@@ -23,19 +22,25 @@ function App() {
   };
 
   const toggleSubscription = () => {
-    setUnsubscribe((prev) => {
-      if (prev) {
-        prev();
-        return null;
-      } else {
-        return echoClient.subscribeEcho((message) => {
+    if (isSubscribed) {
+      unsubscribe?.();
+      setIsSubscribed(false);
+      setUnsubscribe(undefined);
+    } else {
+      setIsSubscribed(true);
+      async function doSubscribe() {
+        const unsubscribe = await echoClient.subscribeEcho((message) => {
           setMessages((prev) => [
             `${new Date().toLocaleTimeString()}: ${message}`,
             ...prev.slice(0, 9),
           ]);
         });
+        // like this because the signature of Unsubscribe matches the signature
+        // of the factory function in useState
+        setUnsubscribe(() => unsubscribe);
       }
-    });
+      doSubscribe();
+    }
   };
 
   return (
