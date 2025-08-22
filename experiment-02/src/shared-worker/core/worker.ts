@@ -1,12 +1,18 @@
-export interface WithClientId {
+import { Observable, Subscription } from "rxjs";
+
+export interface ClientRep {
   clientId: string;
+  eachSubscription: Map<string, Subscription>;
+  allSubscriptions: Subscription;
 }
 
-export const createClientRep = (clientId: string): WithClientId => ({
+export const createClientRep = (clientId: string): ClientRep => ({
   clientId,
+  eachSubscription: new Map(),
+  allSubscriptions: new Subscription(),
 });
 
-export abstract class BaseWorker<T extends WithClientId = WithClientId> {
+export abstract class BaseWorker<T extends ClientRep = ClientRep> {
   protected clients: Map<string, T> = new Map();
   protected createClientRep: (clientId: string) => T;
 
@@ -16,14 +22,44 @@ export abstract class BaseWorker<T extends WithClientId = WithClientId> {
 
   async registerClient(clientId: string, correlationId: string): Promise<void> {
     if (this.clients.has(clientId)) return;
-
     console.log("registerClient", clientId, correlationId);
     this.clients.set(clientId, this.createClientRep(clientId));
-
     navigator.locks.request(clientId, async () => {
-      console.log("unregisterClient", clientId);
-      this.clients.delete(clientId);
+      this.unregisterClient(clientId);
     });
+  }
+
+  private unregisterClient(clientId: string): void {
+    console.log("unregisterClient", clientId);
+    const client = this.clients.get(clientId);
+    if (!client) {
+      console.warn(`Attempted to unregister unknown client: ${clientId}`);
+      return;
+    }
+    client.allSubscriptions.unsubscribe();
+    client.eachSubscription.clear();
+    this.clients.delete(clientId);
+  }
+
+  protected subscribe<T>(
+    clientId: string,
+    correlationId: string,
+    callback: (value: T) => void,
+    source$: Observable<T>
+  ): void {
+    const client = this.getClient(clientId);
+    const subscription = source$.subscribe(callback);
+    client.eachSubscription.set(correlationId, subscription);
+    client.allSubscriptions.add(subscription);
+  }
+
+  protected unsubscribe(clientId: string, correlationId: string): void {
+    const client = this.getClient(clientId);
+    const subscription = client.eachSubscription.get(correlationId);
+    if (!subscription) return;
+    subscription.unsubscribe();
+    client.allSubscriptions.remove(subscription);
+    client.eachSubscription.delete(correlationId);
   }
 
   protected getClient(clientId: string): T {
