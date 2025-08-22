@@ -4,6 +4,7 @@ import type { Contract, Mutation } from "./meta";
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
   clientId: string,
+  getCorrelationId: () => string
 ) => TContract;
 
 export type RemoteWorker<T> = Comlink.Remote<T>;

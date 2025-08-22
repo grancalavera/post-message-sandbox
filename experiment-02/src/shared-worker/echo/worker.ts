@@ -1,12 +1,9 @@
 import * as Comlink from "comlink";
-import type { RegistryWorkerContract } from "../core/types";
+import { Subject } from "rxjs";
 import { BaseWorker } from "../core/worker";
 import type { EchoWorkerContract } from "./contract";
-import { Subject } from "rxjs";
 
-type CombinedContract = EchoWorkerContract & RegistryWorkerContract;
-
-class EchoWorker extends BaseWorker implements CombinedContract {
+class EchoWorker extends BaseWorker implements EchoWorkerContract {
   private echo$ = new Subject<string>();
 
   async echo(
@@ -15,7 +12,7 @@ class EchoWorker extends BaseWorker implements CombinedContract {
     message: string
   ): Promise<string> {
     const echoedMessage = `echo: ${message}`;
-    console.log(clientId, correlationId, echoedMessage);
+    console.log("echo", clientId, correlationId, echoedMessage);
     this.echo$.next(echoedMessage);
     return echoedMessage;
   }

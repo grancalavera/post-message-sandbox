@@ -11,9 +11,16 @@ const portToRemote = <T>(port: MessagePort): Comlink.Remote<T> =>
 export abstract class BaseClient<T> {
   protected remote: Comlink.Remote<T>;
   protected clientId: string;
-  constructor(port: MessagePort, clientId: string) {
+  protected getCorrelationId: () => string;
+
+  constructor(
+    port: MessagePort,
+    clientId: string,
+    getCorrelationId: () => string
+  ) {
     this.remote = portToRemote<T>(port);
     this.clientId = clientId;
+    this.getCorrelationId = getCorrelationId;
   }
 
   getClientId(): string {
@@ -28,8 +35,12 @@ class RegistryClient
   private isRegistered = false;
   private registration: PromiseWithResolvers<void> | undefined;
 
-  constructor(port: MessagePort, clientId: string) {
-    super(port, clientId);
+  constructor(
+    port: MessagePort,
+    clientId: string,
+    getCorrelationId = () => crypto.randomUUID()
+  ) {
+    super(port, clientId, getCorrelationId);
   }
 
   async registerClient(): Promise<void> {
@@ -58,10 +69,10 @@ class RegistryClient
 export const createClient = async <T>(
   worker: SharedWorker,
   Service: ClientConstructor<T>,
-  getClientId = () => crypto.randomUUID(),
+  getRandomId = () => crypto.randomUUID()
 ): Promise<T> => {
-  const clientId = getClientId();
-  const registryClient = new RegistryClient(worker.port, clientId);
+  const clientId = getRandomId();
+  const registryClient = new RegistryClient(worker.port, clientId, getRandomId);
   await registryClient.registerClient();
-  return new Service(worker.port, clientId);
+  return new Service(worker.port, clientId, getRandomId);
 };

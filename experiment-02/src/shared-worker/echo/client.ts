@@ -7,20 +7,24 @@ export class EchoClient
   extends BaseClient<EchoWorkerContract>
   implements EchoClientContract
 {
-  constructor(port: MessagePort, clientId: string) {
-    super(port, clientId);
+  constructor(
+    port: MessagePort,
+    clientId: string,
+    getCorrelationId: () => string
+  ) {
+    super(port, clientId, getCorrelationId);
   }
 
   async echo(message: string): Promise<string> {
-    return this.remote.echo(this.clientId, crypto.randomUUID(), message);
+    return this.remote.echo(this.clientId, this.getCorrelationId(), message);
   }
 
   subscribeEcho(callback: (message: string) => void): Unsubscribe {
-    const correlationId = crypto.randomUUID();
+    const correlationId = this.getCorrelationId();
     this.remote.subscribeEcho_subscribe(
       this.clientId,
       correlationId,
-      Comlink.proxy(callback),
+      Comlink.proxy(callback)
     );
     return () => {
       this.remote.subscribeEcho_unsubscribe(this.clientId, correlationId);
