@@ -47,10 +47,20 @@ export type WorkerContract<T> = {
   [K in keyof T]: T[K] extends { worker: infer Worker } ? Worker : never;
 };
 
+// Check if T contains any reserved method names
+type HasReservedMethods<T> = keyof T & ReservedMethods extends never
+  ? false
+  : true;
+
+// Generate error message with specific reserved methods found
+type FindReservedMethods<T> = {
+  [K in keyof T]: K extends ReservedMethods ? K : never;
+}[keyof T];
+
 export type Contract<
-  T extends Record<string, { client: unknown } & { worker: unknown }> & {
-    [K in keyof T]: K extends ReservedMethods ? never : T[K];
-  },
+  T extends HasReservedMethods<T> extends true
+    ? `❌ Contract contains reserved method names: ${FindReservedMethods<T> & string}. Reserved names cannot be used: 'subscribe', 'getClient'`
+    : Record<string, { client: unknown } & { worker: unknown }>,
 > = {
   client: ClientContract<T>;
   worker: WorkerContract<T>;
