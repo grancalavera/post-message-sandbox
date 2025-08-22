@@ -91,6 +91,6 @@ interval(1000).pipe(
   materialize(),
   tap((notification) => {
     console.log("Notification:", notification);
-  })
+  }),
 );
 ```

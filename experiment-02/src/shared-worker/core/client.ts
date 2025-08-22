@@ -7,7 +7,7 @@ import type {
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
   clientId: string,
-  getCorrelationId: () => string
+  getCorrelationId: () => string,
 ) => TContract;
 
 const portToWorkerProxy = <T>(port: MessagePort): Comlink.Remote<T> =>
@@ -21,7 +21,7 @@ export abstract class WorkerProxy<T> {
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string
+    getCorrelationId: () => string,
   ) {
     this.proxy = portToWorkerProxy<T>(port);
     this.clientId = clientId;
@@ -43,7 +43,7 @@ class RegistryClient
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId = () => crypto.randomUUID()
+    getCorrelationId = () => crypto.randomUUID(),
   ) {
     super(port, clientId, getCorrelationId);
   }
@@ -74,7 +74,7 @@ class RegistryClient
 export const createClient = async <T>(
   worker: SharedWorker,
   Client: ClientConstructor<T>,
-  getRandomId = () => crypto.randomUUID()
+  getRandomId = () => crypto.randomUUID(),
 ): Promise<T> => {
   const clientId = getRandomId();
   const registryClient = new RegistryClient(worker.port, clientId, getRandomId);

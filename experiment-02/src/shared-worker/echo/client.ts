@@ -10,7 +10,7 @@ export class EchoClient
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string
+    getCorrelationId: () => string,
   ) {
     super(port, clientId, getCorrelationId);
   }
@@ -25,7 +25,7 @@ export class EchoClient
     this.proxy.subscribeEcho_subscribe(
       this.clientId,
       correlationId,
-      Comlink.proxy(callback)
+      Comlink.proxy(callback),
     );
 
     return () => {

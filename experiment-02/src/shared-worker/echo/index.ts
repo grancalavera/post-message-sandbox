@@ -6,7 +6,7 @@ export const echoClient1 = await createClient(
     type: "module",
     name: "Echo 1",
   }),
-  EchoClient
+  EchoClient,
 );
 
 export const echoClient2 = await createClient(
@@ -14,6 +14,6 @@ export const echoClient2 = await createClient(
     type: "module",
     name: "Echo 2",
   }),
-  EchoClient
+  EchoClient,
 );
 // 740 x 340
