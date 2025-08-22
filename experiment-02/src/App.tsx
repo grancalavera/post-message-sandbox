@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { EchoDemo } from "./EchoDemo";
 import { echoClientOne, echoClientTwo } from "./shared-worker/echo";
-import { ClockAndLine } from "./ClockAndLine";
 
 interface TabButtonProps {
   isActive: boolean;
@@ -38,9 +37,7 @@ function TabPanel({ isActive, children }: TabPanelProps) {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<"echo1" | "echo2" | "clock">(
-    "echo1",
-  );
+  const [activeTab, setActiveTab] = useState<"echo1" | "echo2">("echo1");
 
   return (
     <div>
@@ -63,21 +60,12 @@ function App() {
         >
           Echo 2
         </TabButton>
-        <TabButton
-          isActive={activeTab === "clock"}
-          onClick={() => setActiveTab("clock")}
-        >
-          Clock and line demo
-        </TabButton>
       </div>
       <TabPanel isActive={activeTab === "echo1"}>
         <EchoDemo echoClient={echoClientOne} />
       </TabPanel>
       <TabPanel isActive={activeTab === "echo2"}>
         <EchoDemo echoClient={echoClientTwo} />
-      </TabPanel>
-      <TabPanel isActive={activeTab === "clock"}>
-        <ClockAndLine />
       </TabPanel>
     </div>
   );

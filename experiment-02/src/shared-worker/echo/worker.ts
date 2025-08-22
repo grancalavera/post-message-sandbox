@@ -8,7 +8,7 @@ export class EchoWorker extends BaseWorker implements EchoWorkerContract {
   async echo(
     clientId: string,
     correlationId: string,
-    message: string
+    message: string,
   ): Promise<string> {
     const echoedMessage = `echo: ${message}`;
     console.log("echo", clientId, correlationId, echoedMessage);
@@ -19,7 +19,7 @@ export class EchoWorker extends BaseWorker implements EchoWorkerContract {
   subscribeEcho(
     clientId: string,
     correlationId: string,
-    callback: (message: string) => void
+    callback: (message: string) => void,
   ): Promise<() => void> {
     console.log("subscribeEcho", clientId, correlationId);
     return this.subscribe(clientId, correlationId, callback, this.echo$);
