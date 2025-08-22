@@ -52,16 +52,13 @@ type HasReservedMethods<T> = keyof T & ReservedMethods extends never
   ? false
   : true;
 
-// Generate error message with specific reserved methods found
-type FindReservedMethods<T> = {
-  [K in keyof T]: K extends ReservedMethods ? K : never;
-}[keyof T];
+// Create a single error constraint type
+type ContractConstraint<T> =
+  HasReservedMethods<T> extends true
+    ? `❌ Contract uses reserved method names. Reserved names cannot be used: subscribe getClient`
+    : Record<string, { client: unknown } & { worker: unknown }>;
 
-export type Contract<
-  T extends HasReservedMethods<T> extends true
-    ? `❌ Contract contains reserved method names: ${FindReservedMethods<T> & string}. Reserved names cannot be used: 'subscribe', 'getClient'`
-    : Record<string, { client: unknown } & { worker: unknown }>,
-> = {
+export type Contract<T extends ContractConstraint<T>> = {
   client: ClientContract<T>;
   worker: WorkerContract<T>;
 };
