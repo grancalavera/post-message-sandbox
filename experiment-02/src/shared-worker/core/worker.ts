@@ -13,16 +13,6 @@ const createClientRep = (clientId: string): ClientRep => ({
   allSubscriptions: new Subscription(),
 });
 
-/**
- * Prevents sub-classes from overriding the subscribe method.
- */
-export const subscribeMethod = Symbol("subscribe");
-
-/**
- * Prevents sub-classes from overriding the getClient method.
- */
-const getClientMethod = Symbol("getClient");
-
 export abstract class BaseWorker {
   protected clients: Map<string, ClientRep> = new Map();
 
@@ -44,13 +34,13 @@ export abstract class BaseWorker {
     });
   }
 
-  protected async [subscribeMethod]<T>(
+  protected async subscribe<T>(
     clientId: string,
     correlationId: string,
     callback: (value: T) => void,
-    source$: Observable<T>
+    source$: Observable<T>,
   ): Promise<() => void> {
-    const client = this[getClientMethod](clientId);
+    const client = this.getClient(clientId);
     const subscription = source$.subscribe(callback);
     client.eachSubscription.set(correlationId, subscription);
     client.allSubscriptions.add(subscription);
@@ -65,7 +55,7 @@ export abstract class BaseWorker {
     });
   }
 
-  private [getClientMethod](clientId: string): ClientRep {
+  private getClient(clientId: string): ClientRep {
     const client = this.clients.get(clientId);
     if (!client) {
       throw new Error(`Unknown client ${clientId}`);

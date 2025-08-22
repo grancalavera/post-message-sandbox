@@ -1,5 +1,8 @@
 // Building blocks for RPC contracts using variadic tuple types
 
+// Reserved method names that cannot be used in contracts
+type ReservedMethods = "subscribe" | "getClient";
+
 type ArgsToParams<Args> = Args extends void
   ? []
   : Args extends readonly unknown[]
@@ -45,7 +48,9 @@ export type WorkerContract<T> = {
 };
 
 export type Contract<
-  T extends Record<string, { client: unknown } & { worker: unknown }>,
+  T extends Record<string, { client: unknown } & { worker: unknown }> & {
+    [K in keyof T]: K extends ReservedMethods ? never : T[K];
+  },
 > = {
   client: ClientContract<T>;
   worker: WorkerContract<T>;
