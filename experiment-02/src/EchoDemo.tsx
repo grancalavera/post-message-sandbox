@@ -1,37 +1,65 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import type { Unsubscribe } from "./shared-worker/core/meta";
+import type { EchoClient } from "./shared-worker/echo/client";
 
 interface EchoDemoProps {
-  echoInput: string;
-  setEchoInput: (value: string) => void;
-  echoResponseLog: string[];
-  setEchoResponseLog: (
-    value: string[] | ((prev: string[]) => string[]),
-  ) => void;
-  echoSubscriptionMessages: string[];
-  setEchoSubscriptionMessages: (
-    value: string[] | ((prev: string[]) => string[]),
-  ) => void;
-  isSubscribed: boolean;
-  onSendEcho: (focusInput?: () => void) => void;
-  onToggleSubscription: () => void;
+  echoClient: EchoClient;
 }
 
-export function EchoDemo({
-  echoInput,
-  setEchoInput,
-  echoResponseLog,
-  setEchoResponseLog,
-  echoSubscriptionMessages,
-  setEchoSubscriptionMessages,
-  isSubscribed,
-  onSendEcho,
-  onToggleSubscription,
-}: EchoDemoProps) {
+export function EchoDemo({ echoClient }: EchoDemoProps) {
+  const [echoSubscriptionMessages, setEchoSubscriptionMessages] = useState<
+    string[]
+  >([]);
+  const [echoInput, setEchoInput] = useState("Hello World");
+  const [echoResponseLog, setEchoResponseLog] = useState<string[]>([]);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [unsubscribe, setUnsubscribe] = useState<Unsubscribe>();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const sendEcho = async (focusInput?: () => void) => {
+    try {
+      const response = await echoClient.echo(echoInput);
+      setEchoResponseLog((prev) => [
+        `Response: "${response}"`,
+        ...prev.slice(0, 4),
+      ]);
+
+      setEchoInput("");
+      focusInput?.();
+    } catch (error) {
+      setEchoResponseLog((prev) => [`Error: ${error}`, ...prev.slice(0, 4)]);
+      focusInput?.();
+    }
+  };
+
+  const toggleSubscription = async () => {
+    if (isSubscribed) {
+      unsubscribe?.();
+      setIsSubscribed(false);
+      setUnsubscribe(undefined);
+    } else {
+      setIsSubscribed(true);
+      try {
+        const unsubscribe = echoClient.subscribeEcho((message: string) => {
+          setEchoSubscriptionMessages((prev) => [
+            `${new Date().toLocaleTimeString()}: ${message}`,
+            ...prev.slice(0, 9),
+          ]);
+        });
+        setUnsubscribe(() => unsubscribe);
+      } catch (error) {
+        setEchoResponseLog((prev) => [
+          `Subscription Error: ${error}`,
+          ...prev.slice(0, 4),
+        ]);
+        setIsSubscribed(false);
+      }
+    }
+  };
 
   const handleSendEcho = () => {
     const focusInput = () => inputRef.current?.focus();
-    onSendEcho(focusInput);
+    sendEcho(focusInput);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -146,7 +174,7 @@ export function EchoDemo({
             }}
           >
             <button
-              onClick={onToggleSubscription}
+              onClick={toggleSubscription}
               style={{
                 padding: "6px 12px",
                 background: isSubscribed ? "#dc3545" : "#28a745",
