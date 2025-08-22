@@ -39,7 +39,7 @@ function TabPanel({ isActive, children }: TabPanelProps) {
 
 function App() {
   const [activeTab, setActiveTab] = useState<"echo1" | "echo2" | "clock">(
-    "echo1"
+    "echo1",
   );
 
   return (

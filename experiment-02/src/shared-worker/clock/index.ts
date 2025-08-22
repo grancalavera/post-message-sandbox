@@ -7,5 +7,5 @@ export const clockAndLine = await createClient(
     // https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker/SharedWorker#name
     name: "Clock & Line",
   }),
-  ClockClient
+  ClockClient,
 );

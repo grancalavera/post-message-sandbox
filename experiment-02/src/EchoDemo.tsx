@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import type { Unsubscribe } from "./shared-worker/core/meta";
 import type { EchoClient } from "./shared-worker/echo/client";
 
 interface EchoDemoProps {
@@ -13,7 +12,7 @@ export function EchoDemo({ echoClient }: EchoDemoProps) {
   const [echoInput, setEchoInput] = useState("Hello World");
   const [echoResponseLog, setEchoResponseLog] = useState<string[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [unsubscribe, setUnsubscribe] = useState<Unsubscribe>();
+  const [unsubscribe, setUnsubscribe] = useState<() => void>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const sendEcho = async (focusInput?: () => void) => {
@@ -40,12 +39,14 @@ export function EchoDemo({ echoClient }: EchoDemoProps) {
     } else {
       setIsSubscribed(true);
       try {
-        const unsubscribe = echoClient.subscribeEcho((message: string) => {
-          setEchoSubscriptionMessages((prev) => [
-            `${new Date().toLocaleTimeString()}: ${message}`,
-            ...prev.slice(0, 9),
-          ]);
-        });
+        const unsubscribe = await echoClient.subscribeEcho(
+          (message: string) => {
+            setEchoSubscriptionMessages((prev) => [
+              `${new Date().toLocaleTimeString()}: ${message}`,
+              ...prev.slice(0, 9),
+            ]);
+          },
+        );
         setUnsubscribe(() => unsubscribe);
       } catch (error) {
         setEchoResponseLog((prev) => [

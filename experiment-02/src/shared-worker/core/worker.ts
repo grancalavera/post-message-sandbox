@@ -1,3 +1,4 @@
+import * as Comlink from "comlink";
 import { Observable, Subscription } from "rxjs";
 
 interface ClientRep {
@@ -36,22 +37,26 @@ export abstract class BaseWorker {
     this.clients.delete(clientId);
   }
 
-  protected subscribe<T>(
+  protected async subscribe<T>(
     clientId: string,
     correlationId: string,
     callback: (value: T) => void,
     source$: Observable<T>,
-  ): void {
+  ): Promise<() => void> {
     const client = this.getClient(clientId);
     const subscription = source$.subscribe(callback);
     client.eachSubscription.set(correlationId, subscription);
     client.allSubscriptions.add(subscription);
+    return Comlink.proxy(() => {
+      this.unsubscribe(clientId, correlationId);
+    });
   }
 
   protected unsubscribe(clientId: string, correlationId: string): void {
     const client = this.getClient(clientId);
     const subscription = client.eachSubscription.get(correlationId);
     if (!subscription) return;
+    console.log("unsubscribe", clientId, correlationId);
     subscription.unsubscribe();
     client.allSubscriptions.remove(subscription);
     client.eachSubscription.delete(correlationId);

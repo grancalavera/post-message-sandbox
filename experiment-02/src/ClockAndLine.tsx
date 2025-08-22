@@ -17,7 +17,7 @@ export const ClockAndLine = () => {
             setUnsubscribe(undefined);
           }}
         >
-          Subscribe from time
+          Unsubscribe from time
         </button>
       ) : (
         <button

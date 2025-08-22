@@ -1,5 +1,4 @@
 import { WorkerProxy } from "../core/client";
-import type { Unsubscribe } from "../core/meta";
 import type { EchoClientContract, EchoWorkerContract } from "./contract";
 import * as Comlink from "comlink";
 
@@ -10,26 +9,24 @@ export class EchoClient
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string,
+    getCorrelationId: () => string
   ) {
     super(port, clientId, getCorrelationId);
   }
 
-  async echo(message: string): Promise<string> {
+  echo(message: string): Promise<string> {
     return this.proxy.echo(this.clientId, this.getCorrelationId(), message);
   }
 
-  subscribeEcho(callback: (message: string) => void): Unsubscribe {
+  async subscribeEcho(
+    callback: (message: string) => void
+  ): Promise<() => void> {
     const correlationId = this.getCorrelationId();
 
-    this.proxy.subscribeEcho_subscribe(
+    return this.proxy.subscribeEcho(
       this.clientId,
       correlationId,
-      Comlink.proxy(callback),
+      Comlink.proxy(callback)
     );
-
-    return () => {
-      this.proxy.subscribeEcho_unsubscribe(this.clientId, correlationId);
-    };
   }
 }
