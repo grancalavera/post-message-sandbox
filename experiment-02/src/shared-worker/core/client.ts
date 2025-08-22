@@ -4,12 +4,23 @@ import type {
   RegistryClientContract,
   RegistryWorkerContract,
 } from "./types";
+import type { Unsubscribe } from "./meta";
 
-const portToRemote = <T>(port: MessagePort): Comlink.Remote<T> =>
+const portToWorkerProxy = <T>(port: MessagePort): Comlink.Remote<T> =>
   Comlink.wrap<T>(port);
 
-export abstract class BaseClient<T> {
-  protected remote: Comlink.Remote<T>;
+type SubscribeMethod<T> = (
+  clientId: string,
+  correlationId: string,
+  callback: Callback<T>
+) => void;
+
+type UnsubscribeMethod = (clientId: string, correlationId: string) => void;
+
+type Callback<T> = (value: T) => void;
+
+export abstract class WorkerProxy<T> {
+  protected proxy: Comlink.Remote<T>;
   protected clientId: string;
   protected getCorrelationId: () => string;
 
@@ -18,7 +29,7 @@ export abstract class BaseClient<T> {
     clientId: string,
     getCorrelationId: () => string
   ) {
-    this.remote = portToRemote<T>(port);
+    this.proxy = portToWorkerProxy<T>(port);
     this.clientId = clientId;
     this.getCorrelationId = getCorrelationId;
   }
@@ -26,10 +37,27 @@ export abstract class BaseClient<T> {
   getClientId(): string {
     return this.clientId;
   }
+
+  protected subscribe<TValue>(
+    subscribeMethod: SubscribeMethod<TValue>,
+    unsubscribeMethod: UnsubscribeMethod,
+    callback: Callback<TValue>
+  ): Unsubscribe {
+    const correlationId = this.getCorrelationId();
+    subscribeMethod.call(
+      this.proxy,
+      this.clientId,
+      correlationId,
+      Comlink.proxy(callback)
+    );
+    return () => {
+      unsubscribeMethod.call(this.proxy, this.clientId, correlationId);
+    };
+  }
 }
 
 class RegistryClient
-  extends BaseClient<RegistryWorkerContract>
+  extends WorkerProxy<RegistryWorkerContract>
   implements RegistryClientContract
 {
   private isRegistered = false;
@@ -56,7 +84,7 @@ class RegistryClient
     this.registration = registration;
 
     navigator.locks.request(this.clientId, async () => {
-      await this.remote.registerClient(this.clientId, crypto.randomUUID());
+      await this.proxy.registerClient(this.clientId, crypto.randomUUID());
       this.isRegistered = true;
       registration.resolve();
       return new Promise(() => {});
