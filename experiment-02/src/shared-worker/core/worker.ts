@@ -13,6 +13,16 @@ const createClientRep = (clientId: string): ClientRep => ({
   allSubscriptions: new Subscription(),
 });
 
+/**
+ * Prevents sub-classes from overriding the subscribe method.
+ */
+export const subscribeMethod = Symbol("subscribe");
+
+/**
+ * Prevents sub-classes from overriding the getClient method.
+ */
+const getClientMethod = Symbol("getClient");
+
 export abstract class BaseWorker {
   protected clients: Map<string, ClientRep> = new Map();
 
@@ -20,49 +30,42 @@ export abstract class BaseWorker {
     if (this.clients.has(clientId)) return;
     console.log("registerClient", clientId, correlationId);
     this.clients.set(clientId, createClientRep(clientId));
+
     navigator.locks.request(clientId, async () => {
-      this.unregisterClient(clientId);
+      console.log("unregisterClient", clientId);
+      const client = this.clients.get(clientId);
+      if (!client) {
+        console.warn(`Attempted to unregister unknown client: ${clientId}`);
+        return;
+      }
+      client.allSubscriptions.unsubscribe();
+      client.eachSubscription.clear();
+      this.clients.delete(clientId);
     });
   }
 
-  private unregisterClient(clientId: string): void {
-    console.log("unregisterClient", clientId);
-    const client = this.clients.get(clientId);
-    if (!client) {
-      console.warn(`Attempted to unregister unknown client: ${clientId}`);
-      return;
-    }
-    client.allSubscriptions.unsubscribe();
-    client.eachSubscription.clear();
-    this.clients.delete(clientId);
-  }
-
-  protected async subscribe<T>(
+  protected async [subscribeMethod]<T>(
     clientId: string,
     correlationId: string,
     callback: (value: T) => void,
-    source$: Observable<T>,
+    source$: Observable<T>
   ): Promise<() => void> {
-    const client = this.getClient(clientId);
+    const client = this[getClientMethod](clientId);
     const subscription = source$.subscribe(callback);
     client.eachSubscription.set(correlationId, subscription);
     client.allSubscriptions.add(subscription);
+
     return Comlink.proxy(() => {
-      this.unsubscribe(clientId, correlationId);
+      const subscription = client.eachSubscription.get(correlationId);
+      if (!subscription) return;
+      console.log("unsubscribe", clientId, correlationId);
+      subscription.unsubscribe();
+      client.allSubscriptions.remove(subscription);
+      client.eachSubscription.delete(correlationId);
     });
   }
 
-  protected unsubscribe(clientId: string, correlationId: string): void {
-    const client = this.getClient(clientId);
-    const subscription = client.eachSubscription.get(correlationId);
-    if (!subscription) return;
-    console.log("unsubscribe", clientId, correlationId);
-    subscription.unsubscribe();
-    client.allSubscriptions.remove(subscription);
-    client.eachSubscription.delete(correlationId);
-  }
-
-  protected getClient(clientId: string): ClientRep {
+  private [getClientMethod](clientId: string): ClientRep {
     const client = this.clients.get(clientId);
     if (!client) {
       throw new Error(`Unknown client ${clientId}`);

@@ -9,7 +9,7 @@ export class EchoClient
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string,
+    getCorrelationId: () => string
   ) {
     super(port, clientId, getCorrelationId);
   }
@@ -18,15 +18,11 @@ export class EchoClient
     return this.proxy.echo(this.clientId, this.getCorrelationId(), message);
   }
 
-  async subscribeEcho(
-    callback: (message: string) => void,
-  ): Promise<() => void> {
-    const correlationId = this.getCorrelationId();
-
+  subscribeEcho(callback: (message: string) => void): Promise<() => void> {
     return this.proxy.subscribeEcho(
       this.clientId,
-      correlationId,
-      Comlink.proxy(callback),
+      this.getCorrelationId(),
+      Comlink.proxy(callback)
     );
   }
 }
