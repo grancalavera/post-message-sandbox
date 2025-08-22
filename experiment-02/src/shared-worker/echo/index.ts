@@ -1,10 +1,19 @@
 import { createClient } from "../core/client";
 import { EchoClient } from "./client";
 
-export const echoClient = await createClient(
-  new SharedWorker(new URL("./worker.ts", import.meta.url), {
+export const echoClient1 = await createClient(
+  new SharedWorker(new URL("./worker.ts?id=echo-1", import.meta.url), {
     type: "module",
-    name: "Echo",
+    name: "Echo 1",
   }),
-  EchoClient,
+  EchoClient
 );
+
+export const echoClient2 = await createClient(
+  new SharedWorker(new URL("./worker.ts?id=echo-2", import.meta.url), {
+    type: "module",
+    name: "Echo 2",
+  }),
+  EchoClient
+);
+// 740 x 340

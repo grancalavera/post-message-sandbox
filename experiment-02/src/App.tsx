@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { echoClient } from "./shared-worker/echo";
 import type { Unsubscribe } from "./shared-worker/core/meta";
+import { echoClient1 } from "./shared-worker/echo";
 
 function App() {
   const [messages, setMessages] = useState<string[]>([]);
@@ -11,7 +11,7 @@ function App() {
 
   const sendEcho = async () => {
     try {
-      const response = await echoClient.echo(echoInput);
+      const response = await echoClient1.echo(echoInput);
       setResponseLog((prev) => [
         `Response: "${response}"`,
         ...prev.slice(0, 4),
@@ -29,7 +29,7 @@ function App() {
     } else {
       setIsSubscribed(true);
       async function doSubscribe() {
-        const unsubscribe = await echoClient.subscribeEcho((message) => {
+        const unsubscribe = await echoClient1.subscribeEcho((message) => {
           setMessages((prev) => [
             `${new Date().toLocaleTimeString()}: ${message}`,
             ...prev.slice(0, 9),
@@ -81,7 +81,7 @@ function App() {
           </li>
         </ul>
         <p>
-          <strong>Client ID:</strong> <code>{echoClient.getClientId()}</code>
+          <strong>Client ID:</strong> <code>{echoClient1.getClientId()}</code>
         </p>
       </div>
 

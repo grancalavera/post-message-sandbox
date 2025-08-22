@@ -9,7 +9,7 @@ class EchoWorker extends BaseWorker implements EchoWorkerContract {
   async echo(
     clientId: string,
     correlationId: string,
-    message: string
+    message: string,
   ): Promise<string> {
     const echoedMessage = `echo: ${message}`;
     console.log("echo", clientId, correlationId, echoedMessage);
@@ -20,7 +20,7 @@ class EchoWorker extends BaseWorker implements EchoWorkerContract {
   subscribeEcho_subscribe(
     clientId: string,
     correlationId: string,
-    callback: (message: string) => void
+    callback: (message: string) => void,
   ): void {
     console.log("subscribeEcho_subscribe", clientId, correlationId);
     this.subscribe(clientId, correlationId, callback, this.echo$);

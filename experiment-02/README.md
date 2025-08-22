@@ -81,3 +81,16 @@ src/shared-worker/
    - Send requests from different tabs to see real-time broadcasting
    - Close tabs to observe automatic client cleanup via Web Locks API
 6. **Debugging:** Check browser console for additional client registration and worker lifecycle logging
+
+## Materialized Notifications
+
+Use the concept of materialized notifications to be able to encode errors.
+
+```typescript
+interval(1000).pipe(
+  materialize(),
+  tap((notification) => {
+    console.log("Notification:", notification);
+  })
+);
+```

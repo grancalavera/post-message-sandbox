@@ -17,6 +17,7 @@
     "comlink": "4.4.2",
     "react": "19.1.1",
     "react-dom": "19.1.1",
+    "react-rxjs": "2.0.8",
     "rxjs": "7.8.2"
   },
   "devDependencies": {
