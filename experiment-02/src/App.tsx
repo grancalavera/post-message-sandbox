@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { EchoDemo } from "./EchoDemo";
-import { echoClient1, echoClient2 } from "./shared-worker/echo";
+import { echoClientOne, echoClientTwo } from "./shared-worker/echo";
 
 function App() {
   const [activeTab, setActiveTab] = useState<"echo1" | "echo2">("echo1");
@@ -44,10 +44,10 @@ function App() {
         </button>
       </div>
       <div style={{ display: activeTab === "echo1" ? "block" : "none" }}>
-        <EchoDemo echoClient={echoClient1} />
+        <EchoDemo echoClient={echoClientOne} />
       </div>
       <div style={{ display: activeTab === "echo2" ? "block" : "none" }}>
-        <EchoDemo echoClient={echoClient2} />
+        <EchoDemo echoClient={echoClientTwo} />
       </div>
     </div>
   );

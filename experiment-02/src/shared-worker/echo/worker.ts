@@ -1,9 +1,8 @@
-import * as Comlink from "comlink";
 import { Subject } from "rxjs";
 import { BaseWorker } from "../core/worker";
 import type { EchoWorkerContract } from "./contract";
 
-class EchoWorker extends BaseWorker implements EchoWorkerContract {
+export class EchoWorker extends BaseWorker implements EchoWorkerContract {
   private echo$ = new Subject<string>();
 
   async echo(
@@ -31,12 +30,3 @@ class EchoWorker extends BaseWorker implements EchoWorkerContract {
     this.unsubscribe(clientId, correlationId);
   }
 }
-
-declare const self: SharedWorkerGlobalScope;
-
-const worker = new EchoWorker();
-
-self.addEventListener("connect", (event) => {
-  const port = event.ports[0];
-  Comlink.expose(worker, port);
-});

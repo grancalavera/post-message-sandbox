@@ -10,9 +10,6 @@ export type ClientConstructor<TContract> = new (
   getCorrelationId: () => string,
 ) => TContract;
 
-const portToWorkerProxy = <T>(port: MessagePort): Comlink.Remote<T> =>
-  Comlink.wrap<T>(port);
-
 export abstract class WorkerProxy<T> {
   protected proxy: Comlink.Remote<T>;
   protected clientId: string;
@@ -23,7 +20,7 @@ export abstract class WorkerProxy<T> {
     clientId: string,
     getCorrelationId: () => string,
   ) {
-    this.proxy = portToWorkerProxy<T>(port);
+    this.proxy = Comlink.wrap<T>(port);
     this.clientId = clientId;
     this.getCorrelationId = getCorrelationId;
   }

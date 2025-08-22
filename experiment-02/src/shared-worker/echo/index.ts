@@ -1,19 +1,20 @@
 import { createClient } from "../core/client";
 import { EchoClient } from "./client";
 
-export const echoClient1 = await createClient(
-  new SharedWorker(new URL("./worker.ts?id=echo-1", import.meta.url), {
+export const echoClientOne = await createClient(
+  new SharedWorker(new URL("./worker-runtime.ts", import.meta.url), {
     type: "module",
-    name: "Echo 1",
+    // https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker/SharedWorker#name
+    name: "Echo One",
   }),
   EchoClient,
 );
 
-export const echoClient2 = await createClient(
-  new SharedWorker(new URL("./worker.ts?id=echo-2", import.meta.url), {
+export const echoClientTwo = await createClient(
+  new SharedWorker(new URL("./worker-runtime.ts", import.meta.url), {
     type: "module",
-    name: "Echo 2",
+    // https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker/SharedWorker#name
+    name: "Echo Two",
   }),
   EchoClient,
 );
-// 740 x 340
