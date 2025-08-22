@@ -1,11 +1,3 @@
-import * as Comlink from "comlink";
+import { createSharedWorkerRuntime } from "../core/runtime";
 import { EchoWorker } from "./worker";
-
-declare const self: SharedWorkerGlobalScope;
-
-const worker = new EchoWorker();
-
-self.addEventListener("connect", (event) => {
-  const port = event.ports[0];
-  Comlink.expose(worker, port);
-});
+createSharedWorkerRuntime(new EchoWorker());

@@ -1,9 +1,46 @@
 import { useState } from "react";
 import { EchoDemo } from "./EchoDemo";
 import { echoClientOne, echoClientTwo } from "./shared-worker/echo";
+import { ClockAndLine } from "./ClockAndLine";
+
+interface TabButtonProps {
+  isActive: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}
+
+function TabButton({ isActive, onClick, children }: TabButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "10px 20px",
+        background: isActive ? "#007acc" : "#f8f9fa",
+        color: isActive ? "white" : "#333",
+        border: "none",
+        borderBottom: isActive ? "2px solid #007acc" : "none",
+        cursor: "pointer",
+        fontSize: "14px",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+interface TabPanelProps {
+  isActive: boolean;
+  children: React.ReactNode;
+}
+
+function TabPanel({ isActive, children }: TabPanelProps) {
+  return <div style={{ display: isActive ? "block" : "none" }}>{children}</div>;
+}
 
 function App() {
-  const [activeTab, setActiveTab] = useState<"echo1" | "echo2">("echo1");
+  const [activeTab, setActiveTab] = useState<"echo1" | "echo2" | "clock">(
+    "echo1"
+  );
 
   return (
     <div>
@@ -14,41 +51,34 @@ function App() {
           marginBottom: "10px",
         }}
       >
-        <button
+        <TabButton
+          isActive={activeTab === "echo1"}
           onClick={() => setActiveTab("echo1")}
-          style={{
-            padding: "10px 20px",
-            background: activeTab === "echo1" ? "#007acc" : "#f8f9fa",
-            color: activeTab === "echo1" ? "white" : "#333",
-            border: "none",
-            borderBottom: activeTab === "echo1" ? "2px solid #007acc" : "none",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
         >
           Echo 1
-        </button>
-        <button
+        </TabButton>
+        <TabButton
+          isActive={activeTab === "echo2"}
           onClick={() => setActiveTab("echo2")}
-          style={{
-            padding: "10px 20px",
-            background: activeTab === "echo2" ? "#007acc" : "#f8f9fa",
-            color: activeTab === "echo2" ? "white" : "#333",
-            border: "none",
-            borderBottom: activeTab === "echo2" ? "2px solid #007acc" : "none",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
         >
           Echo 2
-        </button>
+        </TabButton>
+        <TabButton
+          isActive={activeTab === "clock"}
+          onClick={() => setActiveTab("clock")}
+        >
+          Clock and line demo
+        </TabButton>
       </div>
-      <div style={{ display: activeTab === "echo1" ? "block" : "none" }}>
+      <TabPanel isActive={activeTab === "echo1"}>
         <EchoDemo echoClient={echoClientOne} />
-      </div>
-      <div style={{ display: activeTab === "echo2" ? "block" : "none" }}>
+      </TabPanel>
+      <TabPanel isActive={activeTab === "echo2"}>
         <EchoDemo echoClient={echoClientTwo} />
-      </div>
+      </TabPanel>
+      <TabPanel isActive={activeTab === "clock"}>
+        <ClockAndLine />
+      </TabPanel>
     </div>
   );
 }
