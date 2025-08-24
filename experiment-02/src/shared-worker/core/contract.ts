@@ -1,4 +1,4 @@
-import type { Contract, Mutation } from "./meta";
+import type { Contract, Mutation } from "./types";
 
 type RegistryContract = Contract<{
   registerClient: Mutation;

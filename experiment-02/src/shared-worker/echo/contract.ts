@@ -1,4 +1,4 @@
-import type { Contract, Mutation, Subscription } from "../core/meta";
+import type { Contract, Mutation, Subscription } from "../core/types";
 
 type EchoContract = Contract<{
   echo: Mutation<string, string>;
