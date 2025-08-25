@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EchoDemo } from "./EchoDemo";
-import { echoClientOne, echoClientTwo } from "./shared-worker/echo";
+import { getEchoClientOne, getEchoClientTwo } from "./shared-worker/echo";
+import type { EchoClient } from "./shared-worker/echo/client";
 
 interface TabButtonProps {
   isActive: boolean;
@@ -38,6 +39,33 @@ function TabPanel({ isActive, children }: TabPanelProps) {
 
 function App() {
   const [activeTab, setActiveTab] = useState<"echo1" | "echo2">("echo1");
+  const [echoClientOne, setEchoClientOne] = useState<EchoClient | null>(null);
+  const [echoClientTwo, setEchoClientTwo] = useState<EchoClient | null>(null);
+
+  useEffect(() => {
+    const initClients = async () => {
+      try {
+        const [clientOne, clientTwo] = await Promise.all([
+          getEchoClientOne(),
+          getEchoClientTwo(),
+        ]);
+        setEchoClientOne(clientOne);
+        setEchoClientTwo(clientTwo);
+      } catch (error) {
+        console.error("Failed to initialize echo clients:", error);
+      }
+    };
+
+    initClients();
+  }, []);
+
+  if (!echoClientOne || !echoClientTwo) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        Loading echo clients...
+      </div>
+    );
+  }
 
   return (
     <div>

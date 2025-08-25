@@ -18,11 +18,22 @@ export class EchoClient
     return this.proxy.echo(this.clientId, this.getCorrelationId(), message);
   }
 
-  subscribeEcho(callback: (message: string) => void): Promise<() => void> {
-    return this.proxy.subscribeEcho(
+  async subscribeEcho(
+    callback: (message: string) => void,
+  ): Promise<() => void> {
+    const unsubscribe = await this.proxy.subscribeEcho(
       this.clientId,
       this.getCorrelationId(),
       Comlink.proxy(callback),
     );
+
+    // Track the subscription for cleanup on dispose
+    this.addSubscription(unsubscribe);
+
+    // Return a wrapped unsubscribe function that also removes from tracking
+    return () => {
+      this.removeSubscription(unsubscribe);
+      unsubscribe();
+    };
   }
 }

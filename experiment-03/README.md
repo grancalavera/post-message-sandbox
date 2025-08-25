@@ -1,5 +1,27 @@
 # experiment-03: API Developer Experience Review
 
+## Implementation Checklist
+
+### Client Creation Ergonomics
+
+- [x] Replace `createClient(worker, Client, getRandomId?)` with options object
+- [x] Use structure: `{ worker, Client, generateClientId, generateCorrelationId, name }`
+- [x] Remove top-level await exports from echo/index.ts
+
+### Lifecycle and Resource Management
+
+- [x] Add `client.dispose()` API to release Comlink proxy
+- [x] Implement `proxy[Comlink.releaseProxy]()` in dispose method
+- [x] Add cancel all active client-side subscriptions functionality
+- [x] Document callback proxy lifecycle and release safety
+
+## Not yet but maybe later
+
+- [ ] Implement subscription convenience helpers for RxJS Observables
+- [ ] Add error handling standardization with Result<T, E> pattern
+- [ ] Implement RequestContext parameter for timeouts and logging
+- [ ] Add feature detection for SharedWorker and Web Locks API
+
 ## API Developer Experience Review
 
 This review focuses on the developer experience of the SharedWorker + Comlink RPC API in experiment-03, with attention to ergonomics, safety, and portability.

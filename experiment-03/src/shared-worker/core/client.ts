@@ -4,6 +4,14 @@ import type {
   RegistryWorkerContract,
 } from "./contract";
 
+export interface CreateClientOptions<TContract> {
+  worker: SharedWorker;
+  Client: ClientConstructor<TContract>;
+  generateClientId?: () => string;
+  generateCorrelationId?: () => string;
+  name?: string;
+}
+
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
   clientId: string,
@@ -14,6 +22,7 @@ export abstract class WorkerProxy<T> {
   protected proxy: Comlink.Remote<T>;
   protected clientId: string;
   protected getCorrelationId: () => string;
+  private activeSubscriptions: Set<() => void> = new Set();
 
   constructor(
     port: MessagePort,
@@ -28,6 +37,29 @@ export abstract class WorkerProxy<T> {
   getClientId(): string {
     return this.clientId;
   }
+
+  protected addSubscription(unsubscribe: () => void): void {
+    this.activeSubscriptions.add(unsubscribe);
+  }
+
+  protected removeSubscription(unsubscribe: () => void): void {
+    this.activeSubscriptions.delete(unsubscribe);
+  }
+
+  dispose(): void {
+    // Cancel all active subscriptions
+    for (const unsubscribe of this.activeSubscriptions) {
+      try {
+        unsubscribe();
+      } catch (error) {
+        console.warn("Failed to unsubscribe:", error);
+      }
+    }
+    this.activeSubscriptions.clear();
+
+    // Release the Comlink proxy
+    this.proxy[Comlink.releaseProxy]();
+  }
 }
 
 class RegistryClient
@@ -40,7 +72,7 @@ class RegistryClient
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId = () => crypto.randomUUID(),
+    getCorrelationId: () => string = () => crypto.randomUUID(),
   ) {
     super(port, clientId, getCorrelationId);
   }
@@ -69,12 +101,21 @@ class RegistryClient
 }
 
 export const createClient = async <T>(
-  worker: SharedWorker,
-  Client: ClientConstructor<T>,
-  getRandomId = () => crypto.randomUUID(),
+  options: CreateClientOptions<T>,
 ): Promise<T> => {
-  const clientId = getRandomId();
-  const registryClient = new RegistryClient(worker.port, clientId, getRandomId);
+  const {
+    worker,
+    Client,
+    generateClientId = () => crypto.randomUUID(),
+    generateCorrelationId = () => crypto.randomUUID(),
+  } = options;
+
+  const clientId = generateClientId();
+  const registryClient = new RegistryClient(
+    worker.port,
+    clientId,
+    generateCorrelationId,
+  );
   await registryClient.registerClient();
-  return new Client(worker.port, clientId, getRandomId);
+  return new Client(worker.port, clientId, generateCorrelationId);
 };
