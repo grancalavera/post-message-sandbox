@@ -8,6 +8,7 @@ import {
   readdirSync,
   statSync,
   rmSync,
+  cpSync,
 } from "fs";
 import { join } from "path";
 
@@ -79,6 +80,52 @@ function createExperiment(name: string): void {
   console.log(`🌐 URL: http://localhost:5173/${experimentName}/`);
 }
 
+function copyExperiment(sourceExperimentName: string): void {
+  const sourceDir = join(".", sourceExperimentName);
+
+  if (!existsSync(sourceDir)) {
+    console.error(
+      `Error: Source experiment ${sourceExperimentName} does not exist`,
+    );
+    process.exit(1);
+  }
+
+  if (!sourceExperimentName.startsWith("experiment-")) {
+    console.error(
+      `Error: Invalid experiment name format. Expected format: experiment-XX`,
+    );
+    process.exit(1);
+  }
+
+  const experimentNumber = getNextExperimentNumber();
+  const newExperimentName = `experiment-${experimentNumber}`;
+  const newExperimentDir = join(".", newExperimentName);
+
+  if (existsSync(newExperimentDir)) {
+    console.error(
+      `Error: Target experiment directory ${newExperimentName} already exists`,
+    );
+    process.exit(1);
+  }
+
+  // Copy the entire experiment directory
+  cpSync(sourceDir, newExperimentDir, { recursive: true });
+
+  // Update the README.md to reflect the new experiment number
+  const readmePath = join(newExperimentDir, "README.md");
+  if (existsSync(readmePath)) {
+    let readmeContent = readFileSync(readmePath, "utf-8");
+    readmeContent = readmeContent.replace(
+      new RegExp(sourceExperimentName, "g"),
+      newExperimentName,
+    );
+    writeFileSync(readmePath, readmeContent);
+  }
+
+  console.log(`📋 Copied ${sourceExperimentName} to ${newExperimentName}`);
+  console.log(`🌐 URL: http://localhost:5173/${newExperimentName}/`);
+}
+
 function deleteExperiment(experimentName: string): void {
   const experimentDir = join(".", experimentName);
 
@@ -135,10 +182,12 @@ function showUsage(): void {
 
 Commands:
   create <description>    Create a new experiment with auto-generated number
+  copy <experiment>       Copy an existing experiment with auto-generated number
   delete <experiment>     Delete an existing experiment
 
 Examples:
   npx tsx scripts/workbench.ts create "MessageChannel Communication"
+  npx tsx scripts/workbench.ts copy experiment-01
   npx tsx scripts/workbench.ts delete experiment-01`);
 }
 
@@ -160,6 +209,15 @@ function main(): void {
         process.exit(1);
       }
       createExperiment(args.slice(1).join(" "));
+      break;
+
+    case "copy":
+      if (args.length < 2) {
+        console.error("Error: copy command requires an experiment name");
+        showUsage();
+        process.exit(1);
+      }
+      copyExperiment(args[1]);
       break;
 
     case "delete":

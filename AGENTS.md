@@ -44,6 +44,21 @@ For sub-pages within experiments:
 - Create `experiment-XX/sub-page/index.html` with script reference: `<script type="module" src="./src/main.tsx"></script>`
 - Create corresponding `experiment-XX/sub-page/src/main.tsx`
 
+## Copying an Existing Experiment
+
+Use the workbench CLI tool to copy experiments:
+
+```bash
+npm run workbench copy experiment-XX
+```
+
+This automatically:
+
+- Copies the entire experiment directory to a new auto-numbered experiment
+- Updates README.md references to use the new experiment name
+- Preserves all functionality while creating an independent copy
+- Useful for creating variations or building on existing experiments
+
 ## Implementing Experiments
 
 1. Implement the experiment functionality according to the README.md specification
