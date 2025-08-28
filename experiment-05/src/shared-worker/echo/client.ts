@@ -6,23 +6,15 @@ export class EchoClient
   extends WorkerProxy<EchoWorkerContract>
   implements EchoClientContract
 {
-  constructor(
-    port: MessagePort,
-    clientId: string,
-    getCorrelationId: () => string,
-  ) {
-    super(port, clientId, getCorrelationId);
+  constructor(port: MessagePort, clientId: string) {
+    super(port, clientId);
   }
 
   echo(message: string): Promise<string> {
-    return this.proxy.echo(this.clientId, this.getCorrelationId(), message);
+    return this.proxy.echo(this.clientId, message);
   }
 
   subscribeEcho(callback: (message: string) => void): Promise<() => void> {
-    return this.proxy.subscribeEcho(
-      this.clientId,
-      this.getCorrelationId(),
-      Comlink.proxy(callback),
-    );
+    return this.proxy.subscribeEcho(this.clientId, Comlink.proxy(callback));
   }
 }

@@ -35,7 +35,7 @@ export abstract class BaseWorker {
     clientId: string,
     correlationId: string,
     callback: (value: T) => void,
-    source$: Observable<T>
+    source$: Observable<T>,
   ): Promise<() => void> {
     const client = this.getClient(clientId);
     const subscription = source$.subscribe(callback);

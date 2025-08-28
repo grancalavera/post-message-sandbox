@@ -3,22 +3,22 @@ import { Observable, Subscription } from "rxjs";
 
 interface ClientRep {
   clientId: string;
-  eachSubscription: Map<string, Subscription>;
+  subscriptions: Set<Subscription>;
   allSubscriptions: Subscription;
 }
 
 const createClientRep = (clientId: string): ClientRep => ({
   clientId,
-  eachSubscription: new Map(),
+  subscriptions: new Set(),
   allSubscriptions: new Subscription(),
 });
 
 export abstract class BaseWorker {
   protected clients: Map<string, ClientRep> = new Map();
 
-  async registerClient(clientId: string, correlationId: string): Promise<void> {
+  async registerClient(clientId: string): Promise<void> {
     if (this.clients.has(clientId)) return;
-    console.log("registerClient", clientId, correlationId);
+    console.log("registerClient", clientId);
     this.clients.set(clientId, createClientRep(clientId));
 
     navigator.locks.request(clientId, async () => {
@@ -29,29 +29,26 @@ export abstract class BaseWorker {
         return;
       }
       client.allSubscriptions.unsubscribe();
-      client.eachSubscription.clear();
+      client.subscriptions.clear();
       this.clients.delete(clientId);
     });
   }
 
   protected async subscribe<T>(
     clientId: string,
-    correlationId: string,
     callback: (value: T) => void,
     source$: Observable<T>,
   ): Promise<() => void> {
     const client = this.getClient(clientId);
     const subscription = source$.subscribe(callback);
-    client.eachSubscription.set(correlationId, subscription);
+    client.subscriptions.add(subscription);
     client.allSubscriptions.add(subscription);
 
     return Comlink.proxy(() => {
-      const subscription = client.eachSubscription.get(correlationId);
-      if (!subscription) return;
-      console.log("unsubscribe", clientId, correlationId);
+      console.log("unsubscribe", clientId);
       subscription.unsubscribe();
       client.allSubscriptions.remove(subscription);
-      client.eachSubscription.delete(correlationId);
+      client.subscriptions.delete(subscription);
     });
   }
 
