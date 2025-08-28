@@ -18,8 +18,8 @@ interface ExperimentTemplate {
   number: string;
 }
 
-function getNextExperimentNumber(): string {
-  const experimentDirs = readdirSync(".")
+function getExistingExperimentNumbers(): number[] {
+  return readdirSync(".")
     .filter(
       (dir: string) =>
         dir.startsWith("experiment-") && statSync(dir).isDirectory(),
@@ -27,23 +27,57 @@ function getNextExperimentNumber(): string {
     .map((dir: string) => parseInt(dir.replace("experiment-", ""), 10))
     .filter((num: number) => !isNaN(num))
     .sort((a: number, b: number) => a - b);
-
-  const nextNumber =
-    experimentDirs.length > 0 ? Math.max(...experimentDirs) + 1 : 1;
-  return nextNumber.toString().padStart(2, "0");
 }
 
-function createExperiment(name: string): void {
-  const experimentNumber = getNextExperimentNumber();
-  const experimentName = `experiment-${experimentNumber}`;
-  const experimentDir = join(".", experimentName);
+function getNextExperimentNumber(): string {
+  const experimentNumbers = getExistingExperimentNumbers();
+  const nextNumber =
+    experimentNumbers.length > 0 ? Math.max(...experimentNumbers) + 1 : 1;
 
-  if (existsSync(experimentDir)) {
+  if (nextNumber > 99) {
     console.error(
-      `Error: Experiment directory ${experimentName} already exists`,
+      "Error: Maximum number of experiments (100) reached. Use numbers 0-99.",
     );
     process.exit(1);
   }
+
+  return nextNumber.toString().padStart(2, "0");
+}
+
+function validateAndNormalizeExperimentNumber(input: string): string {
+  // Accept both n and nn formats (e.g., "5" or "05")
+  const num = parseInt(input, 10);
+
+  if (isNaN(num) || num < 0 || num > 99) {
+    console.error("Error: Experiment number must be between 0 and 99");
+    process.exit(1);
+  }
+
+  return num.toString().padStart(2, "0");
+}
+
+function isExperimentNumberAvailable(number: string): boolean {
+  const experimentDir = join(".", `experiment-${number}`);
+  return !existsSync(experimentDir);
+}
+
+function createExperiment(name: string, customNumber?: string): void {
+  let experimentNumber: string;
+
+  if (customNumber) {
+    experimentNumber = validateAndNormalizeExperimentNumber(customNumber);
+    if (!isExperimentNumberAvailable(experimentNumber)) {
+      console.error(
+        `Error: Experiment experiment-${experimentNumber} already exists`,
+      );
+      process.exit(1);
+    }
+  } else {
+    experimentNumber = getNextExperimentNumber();
+  }
+
+  const experimentName = `experiment-${experimentNumber}`;
+  const experimentDir = join(".", experimentName);
 
   const template: ExperimentTemplate = {
     name,
@@ -80,7 +114,10 @@ function createExperiment(name: string): void {
   console.log(`🌐 URL: http://localhost:5173/${experimentName}/`);
 }
 
-function copyExperiment(sourceExperimentName: string): void {
+function copyExperiment(
+  sourceExperimentName: string,
+  customNumber?: string,
+): void {
   const sourceDir = join(".", sourceExperimentName);
 
   if (!existsSync(sourceDir)) {
@@ -97,16 +134,22 @@ function copyExperiment(sourceExperimentName: string): void {
     process.exit(1);
   }
 
-  const experimentNumber = getNextExperimentNumber();
+  let experimentNumber: string;
+
+  if (customNumber) {
+    experimentNumber = validateAndNormalizeExperimentNumber(customNumber);
+    if (!isExperimentNumberAvailable(experimentNumber)) {
+      console.error(
+        `Error: Experiment experiment-${experimentNumber} already exists`,
+      );
+      process.exit(1);
+    }
+  } else {
+    experimentNumber = getNextExperimentNumber();
+  }
+
   const newExperimentName = `experiment-${experimentNumber}`;
   const newExperimentDir = join(".", newExperimentName);
-
-  if (existsSync(newExperimentDir)) {
-    console.error(
-      `Error: Target experiment directory ${newExperimentName} already exists`,
-    );
-    process.exit(1);
-  }
 
   // Copy the entire experiment directory
   cpSync(sourceDir, newExperimentDir, { recursive: true });
@@ -181,14 +224,24 @@ function showUsage(): void {
   console.log(`Usage: npx tsx scripts/workbench.ts <command> [arguments]
 
 Commands:
-  create <description>    Create a new experiment with auto-generated number
-  copy <experiment>       Copy an existing experiment with auto-generated number
-  delete <experiment>     Delete an existing experiment
+  create <description> [number]    Create a new experiment with auto-generated or custom number
+  copy <experiment> [number]       Copy an existing experiment with auto-generated or custom number
+  delete <experiment>              Delete an existing experiment
+
+Arguments:
+  description                      Description of the experiment
+  experiment                       Experiment name (e.g., experiment-01)
+  number                          Optional custom experiment number (0-99, accepts both n and nn format)
 
 Examples:
   npx tsx scripts/workbench.ts create "MessageChannel Communication"
+  npx tsx scripts/workbench.ts create "MessageChannel Communication" 5
+  npx tsx scripts/workbench.ts create "MessageChannel Communication" 05
   npx tsx scripts/workbench.ts copy experiment-01
-  npx tsx scripts/workbench.ts delete experiment-01`);
+  npx tsx scripts/workbench.ts copy experiment-01 10
+  npx tsx scripts/workbench.ts delete experiment-01
+
+Note: Maximum 100 experiments allowed (experiment-00 to experiment-99)`);
 }
 
 function main(): void {
@@ -202,25 +255,45 @@ function main(): void {
   const command = args[0];
 
   switch (command) {
-    case "create":
+    case "create": {
       if (args.length < 2) {
         console.error("Error: create command requires a description");
         showUsage();
         process.exit(1);
       }
-      createExperiment(args.slice(1).join(" "));
-      break;
+      // Check if last argument is a number (custom experiment number)
+      const lastArg = args[args.length - 1];
+      const isNumber = /^\d{1,2}$/.test(lastArg);
 
-    case "copy":
+      if (isNumber) {
+        const customNumber = lastArg;
+        const description = args.slice(1, -1).join(" ");
+        if (!description) {
+          console.error("Error: create command requires a description");
+          showUsage();
+          process.exit(1);
+        }
+        createExperiment(description, customNumber);
+      } else {
+        createExperiment(args.slice(1).join(" "));
+      }
+      break;
+    }
+
+    case "copy": {
       if (args.length < 2) {
         console.error("Error: copy command requires an experiment name");
         showUsage();
         process.exit(1);
       }
-      copyExperiment(args[1]);
+      // Check if there's a custom number as the third argument
+      const customNumber =
+        args.length > 2 && /^\d{1,2}$/.test(args[2]) ? args[2] : undefined;
+      copyExperiment(args[1], customNumber);
       break;
+    }
 
-    case "delete":
+    case "delete": {
       if (args.length < 2) {
         console.error("Error: delete command requires an experiment name");
         showUsage();
@@ -228,6 +301,7 @@ function main(): void {
       }
       deleteExperiment(args[1]);
       break;
+    }
 
     default:
       console.error(`Error: Unknown command '${command}'`);

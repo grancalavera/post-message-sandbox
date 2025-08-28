@@ -1,6 +1,5 @@
 // Building blocks for RPC contracts using variadic tuple types
 
-// Reserved method names that cannot be used in contracts
 type ReservedMethods = "subscribe" | "getClient";
 
 type ArgsToParams<Args> = Args extends void
