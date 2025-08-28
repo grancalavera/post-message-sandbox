@@ -14,7 +14,7 @@ export interface CreateClientOptions<TContract> {
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
   clientId: string,
-  getCorrelationId: () => string
+  getCorrelationId: () => string,
 ) => TContract;
 
 export abstract class WorkerProxy<T> {
@@ -26,7 +26,7 @@ export abstract class WorkerProxy<T> {
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string
+    getCorrelationId: () => string,
   ) {
     this.proxy = Comlink.wrap<T>(port);
     this.clientId = clientId;
@@ -71,7 +71,7 @@ class RegistryClient
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string = () => crypto.randomUUID()
+    getCorrelationId: () => string = () => crypto.randomUUID(),
   ) {
     super(port, clientId, getCorrelationId);
   }
@@ -100,7 +100,7 @@ class RegistryClient
 }
 
 export const createClient = async <T>(
-  options: CreateClientOptions<T>
+  options: CreateClientOptions<T>,
 ): Promise<T> => {
   const {
     worker,
@@ -113,7 +113,7 @@ export const createClient = async <T>(
   const registryClient = new RegistryClient(
     worker.port,
     clientId,
-    generateCorrelationId
+    generateCorrelationId,
   );
   await registryClient.registerClient();
   return new Client(worker.port, clientId, generateCorrelationId);
