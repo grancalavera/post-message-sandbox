@@ -12,13 +12,12 @@ export interface CreateClientOptions<TContract> {
 
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
-  clientId: string
+  clientId: string,
 ) => TContract;
 
 export abstract class WorkerProxy<T> {
   protected proxy: Comlink.Remote<T>;
   protected clientId: string;
-  private activeSubscriptions: Set<() => void> = new Set();
 
   constructor(port: MessagePort, clientId: string) {
     this.proxy = Comlink.wrap<T>(port);
@@ -65,7 +64,7 @@ class RegistryClient
 }
 
 export const createClient = async <T>(
-  options: CreateClientOptions<T>
+  options: CreateClientOptions<T>,
 ): Promise<T> => {
   const {
     worker,

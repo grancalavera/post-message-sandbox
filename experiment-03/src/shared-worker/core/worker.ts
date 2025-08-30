@@ -37,10 +37,7 @@ export abstract class BaseWorker {
     source$: Observable<T>,
   ): Promise<() => void> {
     const client = this.getClient(clientId);
-    const subscription = source$.subscribe((value) => {
-      console.log("emit", clientId, value);
-      callback(value);
-    });
+    const subscription = source$.subscribe(callback);
     client.subscriptions.add(subscription);
 
     return Comlink.proxy(() => {
