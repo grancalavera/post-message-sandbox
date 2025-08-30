@@ -6,16 +6,12 @@ export class EchoClient
   extends WorkerProxy<EchoWorkerContract>
   implements EchoClientContract
 {
-  constructor(
-    port: MessagePort,
-    clientId: string,
-    getCorrelationId: () => string,
-  ) {
-    super(port, clientId, getCorrelationId);
+  constructor(port: MessagePort, clientId: string) {
+    super(port, clientId);
   }
 
   echo(message: string): Promise<string> {
-    return this.proxy.echo(this.clientId, this.getCorrelationId(), message);
+    return this.proxy.echo(this.clientId, message);
   }
 
   async subscribeEcho(
@@ -23,7 +19,6 @@ export class EchoClient
   ): Promise<() => void> {
     return this.proxy.subscribeEcho(
       this.clientId,
-      this.getCorrelationId(),
       Comlink.proxy(callback),
     );
   }
