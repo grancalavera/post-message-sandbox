@@ -18,7 +18,6 @@ export type ClientConstructor<TContract> = new (
 export abstract class WorkerProxy<T> {
   protected proxy: Comlink.Remote<T>;
   protected clientId: string;
-  private activeSubscriptions: Set<() => void> = new Set();
 
   constructor(port: MessagePort, clientId: string) {
     this.proxy = Comlink.wrap<T>(port);
