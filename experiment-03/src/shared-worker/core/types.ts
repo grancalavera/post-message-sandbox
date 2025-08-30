@@ -10,20 +10,12 @@ type ArgsToParams<Args> = Args extends void
 
 export type Query<Args = void, Response = void> = {
   client: (...args: ArgsToParams<Args>) => Promise<Response>;
-  worker: (
-    clientId: string,
-    correlationId: string,
-    ...args: ArgsToParams<Args>
-  ) => Promise<Response>;
+  worker: (clientId: string, ...args: ArgsToParams<Args>) => Promise<Response>;
 };
 
 export type Mutation<Args = void, Result = void> = {
   client: (...args: ArgsToParams<Args>) => Promise<Result>;
-  worker: (
-    clientId: string,
-    correlationId: string,
-    ...args: ArgsToParams<Args>
-  ) => Promise<Result>;
+  worker: (clientId: string, ...args: ArgsToParams<Args>) => Promise<Result>;
 };
 
 export type Subscription<Args = void, Update = void> = {
@@ -32,7 +24,6 @@ export type Subscription<Args = void, Update = void> = {
   ) => Promise<() => void>;
   worker: (
     clientId: string,
-    correlationId: string,
     ...args: [...ArgsToParams<Args>, callback: (value: Update) => void]
   ) => Promise<() => void>;
 };
