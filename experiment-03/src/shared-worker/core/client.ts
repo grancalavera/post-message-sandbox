@@ -14,19 +14,18 @@ export interface CreateClientOptions<TContract> {
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
   clientId: string,
-  getCorrelationId: () => string
+  getCorrelationId: () => string,
 ) => TContract;
 
 export abstract class WorkerProxy<T> {
   protected proxy: Comlink.Remote<T>;
   protected clientId: string;
   protected getCorrelationId: () => string;
-  private activeSubscriptions: Set<() => void> = new Set();
 
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string
+    getCorrelationId: () => string,
   ) {
     this.proxy = Comlink.wrap<T>(port);
     this.clientId = clientId;
@@ -35,29 +34,6 @@ export abstract class WorkerProxy<T> {
 
   getClientId(): string {
     return this.clientId;
-  }
-
-  protected addSubscription(unsubscribe: () => void): void {
-    this.activeSubscriptions.add(unsubscribe);
-  }
-
-  protected removeSubscription(unsubscribe: () => void): void {
-    this.activeSubscriptions.delete(unsubscribe);
-  }
-
-  dispose(): void {
-    // Cancel all active subscriptions
-    for (const unsubscribe of this.activeSubscriptions) {
-      try {
-        unsubscribe();
-      } catch (error) {
-        console.warn("Failed to unsubscribe:", error);
-      }
-    }
-    this.activeSubscriptions.clear();
-
-    // Release the Comlink proxy
-    this.proxy[Comlink.releaseProxy]();
   }
 }
 
@@ -71,7 +47,7 @@ class RegistryClient
   constructor(
     port: MessagePort,
     clientId: string,
-    getCorrelationId: () => string = () => crypto.randomUUID()
+    getCorrelationId: () => string = () => crypto.randomUUID(),
   ) {
     super(port, clientId, getCorrelationId);
   }
@@ -100,7 +76,7 @@ class RegistryClient
 }
 
 export const createClient = async <T>(
-  options: CreateClientOptions<T>
+  options: CreateClientOptions<T>,
 ): Promise<T> => {
   const {
     worker,
@@ -113,7 +89,7 @@ export const createClient = async <T>(
   const registryClient = new RegistryClient(
     worker.port,
     clientId,
-    generateCorrelationId
+    generateCorrelationId,
   );
   await registryClient.registerClient();
   return new Client(worker.port, clientId, generateCorrelationId);
