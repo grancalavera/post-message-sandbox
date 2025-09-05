@@ -1,45 +1,52 @@
-interface Target {
+interface WorkerApi {
+  multiplyByTwo: (clientId: string, num: number) => number;
+  someProperty: string;
+}
+
+interface ClientApi {
   multiplyByTwo: (num: number) => number;
   someProperty: string;
 }
 
-interface ProxiedTarget {
-  multiplyByTwo: (message: string, num: number) => number;
-  someProperty: string;
-}
-
-const target: Target = {
-  multiplyByTwo: (num: number) => num * 2,
+const target: WorkerApi = {
+  multiplyByTwo: (clientId: string, num: number) => {
+    console.log(`Internal API called with proxyId: ${clientId}`);
+    return num * 2;
+  },
   someProperty: "hello world",
 };
 
-const proxy = new Proxy(target, {
-  get(target, prop, receiver) {
-    const value = Reflect.get(target, prop, receiver);
+function createClient(target: WorkerApi): ClientApi {
+  const clientId = crypto.randomUUID();
+  console.log(`Created client with ID: ${clientId}`);
 
-    if (typeof value === "function") {
-      return function (message: string, ...args: unknown[]) {
-        console.log(message);
-        return value.apply(target, args);
-      };
-    }
+  return new Proxy(target, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver);
 
-    return value;
-  },
-}) as unknown as ProxiedTarget;
+      if (typeof value === "function") {
+        return function (...args: unknown[]) {
+          // Inject proxyId as first argument
+          return value.apply(target, [clientId, ...args]);
+        };
+      }
+
+      return value;
+    },
+  }) as unknown as ClientApi;
+}
+
+const proxy = createClient(target);
 
 // Demo usage
-console.log("=== Direct target calls ===");
-console.log("target.multiplyByTwo(5):", target.multiplyByTwo(5));
+console.log("=== Direct internal API calls ===");
+console.log(
+  "target.multiplyByTwo('manual-id', 5):",
+  target.multiplyByTwo("manual-id", 5)
+);
 console.log("target.someProperty:", target.someProperty);
 
-console.log("\n=== Proxy calls ===");
-console.log(
-  "proxy.multiplyByTwo('Hello from proxy!', 5):",
-  proxy.multiplyByTwo("Hello from proxy!", 5)
-);
-console.log(
-  "proxy.multiplyByTwo('Another message', 10):",
-  proxy.multiplyByTwo("Another message", 10)
-);
+console.log("\n=== Public API calls (via proxy) ===");
+console.log("proxy.multiplyByTwo(5):", proxy.multiplyByTwo(5));
+console.log("proxy.multiplyByTwo(10):", proxy.multiplyByTwo(10));
 console.log("proxy.someProperty:", proxy.someProperty);
