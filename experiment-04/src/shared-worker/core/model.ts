@@ -52,18 +52,6 @@ type StructuredCloneable =
 type ProxyMarkedFunction = ((...args: any[]) => any) & Comlink.ProxyMarked;
 
 /**
- * Extended type that includes both structured cloneable types and
- * Comlink proxy-marked functions for worker communication.
- */
-type ComlinkCompatible =
-  | StructuredCloneable
-  | ProxyMarkedFunction
-  | Array<ComlinkCompatible>
-  | { [key: string]: ComlinkCompatible }
-  | Map<ComlinkCompatible, ComlinkCompatible>
-  | Set<ComlinkCompatible>;
-
-/**
  * Converts operation arguments to proper parameter format.
  * - void arguments become empty parameter array
  * - Array arguments are preserved as-is
@@ -80,8 +68,8 @@ type ArgsToParams<Args> = Args extends void
  * Returns a Promise of the response data.
  */
 export type Query<
-  Args extends ComlinkCompatible = void,
-  Response extends ComlinkCompatible = void,
+  Args extends StructuredCloneable = void,
+  Response extends StructuredCloneable = void,
 > = {
   (...args: ArgsToParams<Args>): Promise<Response>;
 };
@@ -91,8 +79,8 @@ export type Query<
  * Returns a Promise of the operation result.
  */
 export type Mutation<
-  Args extends ComlinkCompatible = void,
-  Result extends ComlinkCompatible = void,
+  Args extends StructuredCloneable = void,
+  Result extends StructuredCloneable = void,
 > = {
   (...args: ArgsToParams<Args>): Promise<Result>;
 };
@@ -103,8 +91,8 @@ export type Mutation<
  * Returns a Promise of an unsubscribe function.
  */
 export type Subscription<
-  Args extends ComlinkCompatible = void,
-  Update extends ComlinkCompatible = void,
+  Args extends StructuredCloneable = void,
+  Update extends StructuredCloneable = void,
 > = {
   (
     ...args: [...ArgsToParams<Args>, callback: (value: Update) => void]
@@ -131,11 +119,22 @@ export type Contract<T extends Operations> = T;
  * Worker-side version of a contract where each operation receives
  * an additional clientId parameter as the first argument.
  * This allows the worker to identify which client is making the request.
+ *
+ * For subscriptions, enforces that callbacks are ProxyMarkedFunction
+ * and return values are ProxyMarkedFunction wrapped in Promise.
  */
 export type WorkerContract<T extends Operations> = {
-  [K in keyof T]: T[K] extends (...args: infer Args) => infer Return
-    ? (clientId: string, ...args: Args) => Return
-    : T[K];
+  [K in keyof T]: T[K] extends Subscription<infer Args, infer Update>
+    ? (
+        clientId: string,
+        ...args: [
+          ...ArgsToParams<Args>,
+          callback: ProxyMarkedFunction & ((value: Update) => void),
+        ]
+      ) => Promise<ProxyMarkedFunction & (() => void)>
+    : T[K] extends (...args: infer Args) => infer Return
+      ? (clientId: string, ...args: Args) => Return
+      : T[K];
 };
 
 /**
@@ -148,9 +147,6 @@ export type ComlinkProxy<T extends Operations> = Comlink.Remote<
 >;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function processArgsForComlink(value: unknown): ComlinkCompatible {
+export function processArgsForComlink(_value: unknown): StructuredCloneable {
   throw new Error("not implemented");
 }
-
-const f = Comlink.proxy(() => {});
-console.log(f);
