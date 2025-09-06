@@ -42,18 +42,25 @@ function processArgsForComlink(value: unknown): unknown {
       [...value.entries()].map(([k, v]) => [
         processArgsForComlink(k),
         processArgsForComlink(v),
-      ]),
+      ])
     );
   }
 
   // Handle plain objects - recursively process properties
   if (value && typeof value === "object" && value.constructor === Object) {
     return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [k, processArgsForComlink(v)]),
+      Object.entries(value).map(([k, v]) => [k, processArgsForComlink(v)])
     );
   }
 
-  // All other types (primitives, null, undefined, etc.) pass through unchanged
+  // All other types must be ComlinkCompatible - throw error if not
+  if (value !== null && value !== undefined && typeof value === "object") {
+    throw new Error(
+      `Invalid type for Comlink processing: ${value.constructor.name}`
+    );
+  }
+
+  // Primitives (string, number, boolean), null, undefined pass through unchanged
   return value;
 }
 ```
@@ -65,7 +72,7 @@ Replace simple function checking with recursive processing:
 ```typescript
 // Before (shallow checking)
 const processedArgs = args.map((arg) =>
-  typeof arg === "function" ? Comlink.proxy(arg) : arg,
+  typeof arg === "function" ? Comlink.proxy(arg) : arg
 );
 
 // After (recursive checking)
@@ -98,13 +105,23 @@ processArgsForComlink(
   new Map([
     ["key", myCallback],
     [anotherCallback, "value"],
-  ]),
+  ])
 ); // → new Map([["key", Comlink.proxy(myCallback)], [Comlink.proxy(anotherCallback), "value"]])
+```
+
+## Error Handling
+
+The function throws a runtime error for any value that cannot be processed as `ComlinkCompatible`:
+
+```typescript
+// This will throw an error
+processArgsForComlink(new Date()); // Error: Invalid type for Comlink processing: Date
+processArgsForComlink(document.createElement("div")); // Error: Invalid type for Comlink processing: HTMLDivElement
 ```
 
 ## Notes
 
 - Only processes plain objects (created with `{}` or `new Object()`)
-- Preserves prototype chain for other object types
+- Throws runtime errors for non-ComlinkCompatible object types
 - Handles circular references by nature of the structured clone algorithm
 - All structured cloneable types pass through unchanged

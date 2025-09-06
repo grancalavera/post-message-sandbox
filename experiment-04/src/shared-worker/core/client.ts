@@ -1,6 +1,6 @@
 import * as Comlink from "comlink";
 import type { RegistryContract } from "./contract";
-import type { ComlinkProxy, Operations } from "./types";
+import type { ComlinkProxy, Operations } from "./model";
 
 export interface CreateClientOptions {
   worker: SharedWorker;

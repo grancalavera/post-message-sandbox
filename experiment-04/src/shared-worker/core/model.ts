@@ -146,3 +146,11 @@ export type WorkerContract<T extends Operations> = {
 export type ComlinkProxy<T extends Operations> = Comlink.Remote<
   WorkerContract<T>
 >;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function processArgsForComlink(value: unknown): ComlinkCompatible {
+  throw new Error("not implemented");
+}
+
+const f = Comlink.proxy(() => {});
+console.log(f);
