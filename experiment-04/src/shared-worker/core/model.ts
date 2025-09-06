@@ -49,7 +49,10 @@ type StructuredCloneable =
  * transferred across worker boundaries while maintaining their callable nature.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ProxyMarkedFunction = ((...args: any[]) => any) & Comlink.ProxyMarked;
+type ProxyMarkedFunction<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends (...args: any[]) => any = (...args: any[]) => any,
+> = T & Comlink.ProxyMarked;
 
 /**
  * Converts operation arguments to proper parameter format.
@@ -129,9 +132,9 @@ export type WorkerContract<T extends Operations> = {
         clientId: string,
         ...args: [
           ...ArgsToParams<Args>,
-          callback: ProxyMarkedFunction & ((value: Update) => void),
+          callback: ProxyMarkedFunction<(value: Update) => void>,
         ]
-      ) => Promise<ProxyMarkedFunction & (() => void)>
+      ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
       ? (clientId: string, ...args: Args) => Return
       : T[K];
