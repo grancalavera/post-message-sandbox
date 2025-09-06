@@ -48,8 +48,7 @@ type StructuredCloneable =
  * These are functions that have been wrapped with Comlink.proxy() and can be
  * transferred across worker boundaries while maintaining their callable nature.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ProxyMarkedFunction<
+export type ProxyMarkedFunction<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends (...args: any[]) => any = (...args: any[]) => any,
 > = T & Comlink.ProxyMarked;
@@ -145,11 +144,6 @@ export type WorkerContract<T extends Operations> = {
  * This wraps the WorkerContract type with Comlink's Remote type,
  * providing type-safe communication across the worker boundary.
  */
-export type ComlinkProxy<T extends Operations> = Comlink.Remote<
+export type WorkerProxy<T extends Operations> = Comlink.Remote<
   WorkerContract<T>
 >;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function processArgsForComlink(_value: unknown): StructuredCloneable {
-  throw new Error("not implemented");
-}

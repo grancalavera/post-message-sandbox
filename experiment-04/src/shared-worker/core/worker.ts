@@ -1,5 +1,6 @@
 import * as Comlink from "comlink";
 import { Observable, Subscription } from "rxjs";
+import type { ProxyMarkedFunction } from "./model";
 
 interface ClientRep {
   clientId: string;
@@ -35,7 +36,7 @@ export abstract class BaseWorker {
     clientId: string,
     callback: (value: T) => void,
     source$: Observable<T>
-  ): Promise<() => void> {
+  ): Promise<ProxyMarkedFunction<() => void>> {
     const client = this.getClient(clientId);
     const subscription = source$.subscribe(callback);
     client.subscriptions.add(subscription);

@@ -10,7 +10,7 @@ interface ClientApi {
   someProperty: string;
 }
 
-const target: WorkerApi = {
+export const target: WorkerApi = {
   multiplyByTwo: (clientId: string, num: number) => {
     console.log(`Internal API called with proxyId: ${clientId}`);
     return num * 2;
@@ -43,9 +43,7 @@ function createClient(target: WorkerApi): ClientApi {
   }) as unknown as ClientApi;
 }
 
-const f = Comlink.proxy(() => {});
-
-const proxy = createClient(target);
+export const proxy = createClient(target);
 
 // Demo usage
 console.log("=== Direct internal API calls ===");

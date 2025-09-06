@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
-import type { EchoClient } from "./shared-worker/echo/client";
+import type { EchoContract } from "./shared-worker/echo/contract";
 
 interface EchoDemoProps {
-  echoClient: EchoClient;
+  echoClient: EchoContract;
 }
 
 export function EchoDemo({ echoClient }: EchoDemoProps) {
@@ -45,7 +45,7 @@ export function EchoDemo({ echoClient }: EchoDemoProps) {
               `${new Date().toLocaleTimeString()}: ${message}`,
               ...prev.slice(0, 9),
             ]);
-          },
+          }
         );
         setUnsubscribe(() => unsubscribe);
       } catch (error) {

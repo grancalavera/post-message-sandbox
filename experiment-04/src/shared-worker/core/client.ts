@@ -1,58 +1,62 @@
 import * as Comlink from "comlink";
 import type { RegistryContract } from "./contract";
-import type { ComlinkProxy, Operations } from "./model";
+import type { Operations, WorkerContract, WorkerProxy } from "./model";
 
 export interface CreateClientOptions {
-  worker: SharedWorker;
+  sharedWorker: SharedWorker;
   generateClientId?: () => string;
 }
 
-class RegistryClient implements RegistryContract {
-  private isRegistered = false;
-  private registration: PromiseWithResolvers<void> | undefined;
-  private proxy: ComlinkProxy<RegistryContract>;
-  private clientId: string;
+const registerClient = async (
+  workerProxy: WorkerProxy<RegistryContract>,
+  clientId: string
+): Promise<void> => {
+  const registration = Promise.withResolvers<void>();
 
-  constructor(proxy: ComlinkProxy<RegistryContract>, clientId: string) {
-    this.proxy = proxy;
-    this.clientId = clientId;
-  }
+  navigator.locks.request(clientId, async () => {
+    await workerProxy.registerClient(clientId);
+    registration.resolve();
+    return new Promise(() => {});
+  });
 
-  async registerClient(): Promise<void> {
-    if (this.isRegistered) {
-      return;
-    }
+  return registration.promise;
+};
 
-    if (this.registration) {
-      return this.registration.promise;
-    }
+const deriveClient = <T extends Operations>(
+  workerProxy: WorkerProxy<T>,
+  clientId: string
+): T =>
+  new Proxy(workerProxy, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver);
 
-    const registration = Promise.withResolvers<void>();
-    this.registration = registration;
+      if (typeof value === "function") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return function (...args: any[]) {
+          const processedArgs = args.map((arg) =>
+            typeof arg === "function" ? Comlink.proxy(arg) : arg
+          );
 
-    navigator.locks.request(this.clientId, async () => {
-      await this.proxy.registerClient(this.clientId);
-      this.isRegistered = true;
-      registration.resolve();
-      return new Promise(() => {});
-    });
+          return value.apply(target, [clientId, ...processedArgs]);
+        };
+      }
 
-    return registration.promise;
-  }
-}
+      return value;
+    },
+  }) as T;
 
 export const createClient = async <T extends Operations>(
   options: CreateClientOptions
 ): Promise<T> => {
-  const { worker, generateClientId = () => crypto.randomUUID() } = options;
+  const { sharedWorker, generateClientId = () => crypto.randomUUID() } =
+    options;
 
   const clientId = generateClientId();
 
-  const registryClient = new RegistryClient(
-    Comlink.wrap(worker.port),
+  await registerClient(Comlink.wrap(sharedWorker.port), clientId);
+
+  return deriveClient<T>(
+    Comlink.wrap<WorkerContract<T>>(sharedWorker.port),
     clientId
   );
-  await registryClient.registerClient();
-
-  throw new Error("not fully implemented yet");
 };
