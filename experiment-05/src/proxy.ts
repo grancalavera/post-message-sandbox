@@ -1,3 +1,5 @@
+import * as Comlink from "comlink";
+
 interface WorkerApi {
   multiplyByTwo: (clientId: string, num: number) => number;
   someProperty: string;
@@ -26,8 +28,13 @@ function createClient(target: WorkerApi): ClientApi {
 
       if (typeof value === "function") {
         return function (...args: unknown[]) {
+          // Process args to wrap functions in Comlink proxies
+          const processedArgs = args.map((arg) =>
+            typeof arg === "function" ? Comlink.proxy(arg) : arg
+          );
+
           // Inject proxyId as first argument
-          return value.apply(target, [clientId, ...args]);
+          return value.apply(target, [clientId, ...processedArgs]);
         };
       }
 
@@ -35,6 +42,8 @@ function createClient(target: WorkerApi): ClientApi {
     },
   }) as unknown as ClientApi;
 }
+
+const f = Comlink.proxy(() => {});
 
 const proxy = createClient(target);
 
