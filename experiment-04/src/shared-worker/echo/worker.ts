@@ -1,35 +1,81 @@
-import { Subject } from "rxjs";
+import * as Comlink from "comlink";
+import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
+import type { RegistryContract } from "../core/contract";
 import type { ProxyMarkedFunction, WorkerContract } from "../core/model";
-import { BaseWorker } from "../core/worker";
 import type { EchoContract } from "./contract";
 
-export class EchoWorker
-  extends BaseWorker
-  implements WorkerContract<EchoContract>
-{
-  private echo$ = Promise.resolve(new Subject<string>());
+interface ClientRep {
+  clientId: string;
+  subscriptions: Subscription;
+}
 
-  async echo(clientId: string, message: string): Promise<string> {
-    const echo$ = await this.echo$;
-    const echoedMessage = `echo: ${message} ${clientId}`;
-    console.log(echoedMessage);
+const createClientRep = (clientId: string): ClientRep => ({
+  clientId,
+  subscriptions: new Subscription(),
+});
 
-    console.log("echo$", echo$);
-    console.log("echo$.observed", echo$.observed);
+const clients: Map<string, ClientRep> = new Map();
+const echo$ = new Subject<string>();
 
-    if (echo$.observed) {
-      echo$.next(echoedMessage);
+const subscribe = <T>(
+  source$: Observable<T>,
+  clientId: string,
+  callback: ProxyMarkedFunction<(value: T) => void>
+): ProxyMarkedFunction<() => void> => {
+  const client = clients.get(clientId);
+
+  if (!client) {
+    throw new ReferenceError(`Unknown client ${client}`);
+  }
+  console.log("subscribe", client.clientId);
+
+  const subscription = source$.subscribe(callback);
+  client.subscriptions.add(subscription);
+
+  return Comlink.proxy(() => {
+    console.log("unsubscribe", client.clientId);
+    subscription.unsubscribe();
+    client.subscriptions.remove(subscription);
+  });
+};
+
+const notify = <T>(source$: Subject<T> | BehaviorSubject<T>, value: T): T => {
+  if (source$.observed) {
+    source$.next(value);
+  }
+  return value;
+};
+
+export const registryWorker: WorkerContract<RegistryContract> = {
+  async registerClient(clientId) {
+    if (clients.has(clientId)) {
+      return;
     }
 
-    return echoedMessage;
-  }
+    console.log("registerClient", clientId);
+    clients.set(clientId, createClientRep(clientId));
 
-  async subscribeEcho(
-    clientId: string,
-    callback: ProxyMarkedFunction<(message: string) => void>
-  ): Promise<ProxyMarkedFunction<() => void>> {
-    const echo$ = await this.echo$;
-    console.log("subscribeEcho", clientId);
-    return this.subscribe(clientId, callback, echo$);
-  }
-}
+    navigator.locks.request(clientId, async () => {
+      console.log("unregister client", clientId);
+      const client = clients.get(clientId);
+      if (!client) {
+        console.warn(`Attempted to unregister unknown client ${clientId}`);
+        return;
+      }
+      client.subscriptions.unsubscribe();
+      clients.delete(clientId);
+    });
+  },
+};
+
+export const echoWorker: WorkerContract<EchoContract> = {
+  async echo(clientId, message) {
+    console.log("echo", { clientId, message });
+    return notify(echo$, message);
+  },
+
+  async subscribeEcho(clientId, callback) {
+    console.log("subscribeEcho", { clientId });
+    return subscribe(echo$, clientId, callback);
+  },
+};

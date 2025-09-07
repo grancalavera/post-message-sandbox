@@ -9,7 +9,7 @@ export interface CreateClientOptions {
 
 const registerClient = async (
   workerProxy: WorkerProxy<RegistryContract>,
-  clientId: string,
+  clientId: string
 ): Promise<void> => {
   const registration = Promise.withResolvers<void>();
 
@@ -24,17 +24,21 @@ const registerClient = async (
 
 const deriveClient = <T extends Operations>(
   workerProxy: WorkerProxy<T>,
-  clientId: string,
+  clientId: string
 ): T =>
   new Proxy(workerProxy, {
     get(target, prop, receiver) {
+      console.log("[get]", { clientId, target, prop, receiver });
+
       const value = Reflect.get(target, prop, receiver);
+      console.log(typeof value);
 
       if (typeof value === "function") {
+        console.log('intercept function call for prop "', String(prop), '"');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return function (...args: any[]) {
           const processedArgs = args.map((arg) =>
-            typeof arg === "function" ? Comlink.proxy(arg) : arg,
+            typeof arg === "function" ? Comlink.proxy(arg) : arg
           );
 
           return value.apply(target, [clientId, ...processedArgs]);
@@ -46,7 +50,7 @@ const deriveClient = <T extends Operations>(
   }) as T;
 
 export const createClient = async <T extends Operations>(
-  options: CreateClientOptions,
+  options: CreateClientOptions
 ): Promise<T> => {
   const { sharedWorker, generateClientId = () => crypto.randomUUID() } =
     options;
@@ -57,6 +61,6 @@ export const createClient = async <T extends Operations>(
 
   return deriveClient<T>(
     Comlink.wrap<WorkerContract<T>>(sharedWorker.port),
-    clientId,
+    clientId
   );
 };
