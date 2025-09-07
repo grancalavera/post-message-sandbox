@@ -1,4 +1,5 @@
 import * as Comlink from "comlink";
+import { Observable, switchMap } from "rxjs";
 
 /**
  * Type helper that ensures only structured cloneable JavaScript types are allowed.
@@ -152,3 +153,63 @@ export type WorkerProxy<T extends Operations> = Comlink.Remote<
  */
 export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
   Comlink.wrap<WorkerContract<T>>(port);
+
+/**
+ * Extracts only the keys from an Operations interface that correspond to Subscription types.
+ * This utility type filters out Query and Mutation operations, leaving only subscription keys.
+ *
+ * Example:
+ * ```typescript
+ * interface MyOperations {
+ *   getData: Query<void, string>;
+ *   updateData: Mutation<string, void>;
+ *   watchChanges: Subscription<void, number>;
+ * }
+ *
+ * type SubKeys = SubscriptionKey<MyOperations>; // "watchChanges"
+ * ```
+ */
+export type SubscriptionKey<T extends Operations> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]: T[K] extends Subscription<any, any> ? K : never;
+}[keyof T];
+
+/**
+ * Creates an RxJS operator that subscribes to a specific subscription operation on a client.
+ * This function bridges the gap between the callback-based subscription API and RxJS observables.
+ *
+ * @param key The subscription key to subscribe to (must be a valid subscription operation)
+ * @returns An RxJS operator that takes a client and returns an Observable of subscription updates
+ *
+ * Usage:
+ * ```typescript
+ * // Given a client with subscription operations
+ * const client$ = of(myClient);
+ *
+ * // Subscribe to updates from a specific subscription
+ * const updates$ = client$.pipe(
+ *   subscribeTo('watchChanges')
+ * );
+ *
+ * updates$.subscribe(update => console.log('Received:', update));
+ * ```
+ *
+ * The operator:
+ * 1. Extracts the Update type from the subscription
+ * 2. Creates an Observable that wraps the callback-based subscription
+ * 3. Handles cleanup by calling the unsubscribe function when the observable is unsubscribed
+ */
+export const subscribeTo = <T extends Operations>(key: SubscriptionKey<T>) =>
+  switchMap((client: T) => {
+    type U =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      T[typeof key] extends Subscription<any, infer Update> ? Update : never;
+
+    return new Observable<U>((subscriber) => {
+      const unsubscribePromise = client[key]!((value: U) => {
+        subscriber.next(value);
+      });
+
+      return () => unsubscribePromise.then((f) => f());
+    });
+  });

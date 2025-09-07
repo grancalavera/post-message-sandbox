@@ -1,26 +1,15 @@
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import { from, Observable, switchMap } from "rxjs";
+import { from } from "rxjs";
+import { subscribeTo } from "./shared-worker/core/model";
 import * as echo from "./shared-worker/echo";
 
-const echoClient = echo.createEchoClient();
-
 const [useEcho] = bind(
-  from(echoClient).pipe(
-    switchMap(
-      (client) =>
-        new Observable<string>((subscriber) => {
-          const unsubscribePromise = client.subscribeEcho((message) => {
-            subscriber.next(message);
-          });
-          return () => unsubscribePromise.then((unsubscribe) => unsubscribe());
-        })
-    )
-  )
+  from(echo.getClient()).pipe(subscribeTo("subscribeEcho"))
 );
 
 const sendEcho = async (message: string) => {
-  const client = await echoClient;
+  const client = await echo.getClient();
   return client.echo(message);
 };
 
