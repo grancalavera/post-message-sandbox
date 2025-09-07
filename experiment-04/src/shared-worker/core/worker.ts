@@ -15,8 +15,6 @@ const createClientRep = (clientId: string): ClientRep => ({
 
 type ClientRepMap = Map<string, ClientRep>;
 
-export const getDefaultClients = (): ClientRepMap => new Map();
-
 export type WorkerContext = {
   notify: <T>(source$: Subject<T> | BehaviorSubject<T>, value: T) => T;
   subscribe: <T>(
@@ -24,7 +22,6 @@ export type WorkerContext = {
     clientId: string,
     callback: (value: T) => void,
   ) => ProxyMarkedFunction<() => void>;
-  createClientRep: (clientId: string) => ClientRep;
   clients: ClientRepMap;
 };
 
@@ -60,19 +57,15 @@ const subscribe =
   };
 
 export const createWorkerFactory =
-  (clients: ClientRepMap) =>
+  (clients: ClientRepMap = new Map()) =>
   <T extends Operations>(
     factory: (context: WorkerContext) => WorkerContract<T>,
-  ): WorkerContract<T> => {
-    const context: WorkerContext = {
-      createClientRep,
+  ): WorkerContract<T> =>
+    factory({
       notify,
       subscribe: subscribe(clients),
       clients,
-    };
-
-    return factory(context);
-  };
+    });
 
 export type WorkerFactory<T extends Operations> = (
   context: WorkerContext,
@@ -81,7 +74,7 @@ export type WorkerFactory<T extends Operations> = (
 export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
   context,
 ) => {
-  const { clients, createClientRep } = context;
+  const { clients } = context;
   return {
     async registerClient(clientId) {
       if (clients.has(clientId)) {
@@ -108,7 +101,6 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
 export const createWorker = <T extends Operations>(
   factory: WorkerFactory<T>,
 ) => {
-  const clients = getDefaultClients();
-  const create = createWorkerFactory(clients);
+  const create = createWorkerFactory();
   return { ...create(factory), ...create(registryWorkerFactory) };
 };

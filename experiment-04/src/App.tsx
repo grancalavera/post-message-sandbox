@@ -1,8 +1,7 @@
-import { from, Observable, switchMap } from "rxjs";
-import * as echo from "./shared-worker/echo";
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import * as Comlink from "comlink";
+import { from, Observable, switchMap } from "rxjs";
+import * as echo from "./shared-worker/echo";
 
 const echoClient = echo.createEchoClient();
 
@@ -11,15 +10,13 @@ const [useEcho] = bind(
     switchMap(
       (client) =>
         new Observable<string>((subscriber) => {
-          const unsubscribePromise = client.subscribeEcho(
-            Comlink.proxy((message) => {
-              subscriber.next(message);
-            }),
-          );
+          const unsubscribePromise = client.subscribeEcho((message) => {
+            subscriber.next(message);
+          });
           return () => unsubscribePromise.then((unsubscribe) => unsubscribe());
-        }),
-    ),
-  ),
+        })
+    )
+  )
 );
 
 const sendEcho = async (message: string) => {

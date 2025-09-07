@@ -122,8 +122,8 @@ export type Contract<T extends Operations> = T;
  * an additional clientId parameter as the first argument.
  * This allows the worker to identify which client is making the request.
  *
- * For subscriptions, enforces that callbacks are ProxyMarkedFunction
- * and return values are ProxyMarkedFunction wrapped in Promise.
+ * For subscriptions, enforces that return values are ProxyMarkedFunction
+ * wrapped in Promise.
  */
 export type WorkerContract<T extends Operations> = {
   [K in keyof T]: T[K] extends Subscription<infer Args, infer Update>

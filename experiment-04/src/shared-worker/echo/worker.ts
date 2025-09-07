@@ -16,5 +16,5 @@ export const echoWorker = createWorker<EchoContract>(
         return subscribe(echo$, clientId, callback);
       },
     };
-  },
+  }
 );
