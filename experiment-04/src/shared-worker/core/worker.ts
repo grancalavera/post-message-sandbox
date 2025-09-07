@@ -22,7 +22,7 @@ export type WorkerContext = {
   subscribe: <T>(
     source$: Observable<T>,
     clientId: string,
-    callback: (value: T) => void
+    callback: (value: T) => void,
   ) => ProxyMarkedFunction<() => void>;
   createClientRep: (clientId: string) => ClientRep;
   clients: ClientRepMap;
@@ -40,7 +40,7 @@ const subscribe =
   <T>(
     source$: Observable<T>,
     clientId: string,
-    callback: (value: T) => void
+    callback: (value: T) => void,
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
@@ -62,7 +62,7 @@ const subscribe =
 export const createWorkerFactory =
   (clients: ClientRepMap) =>
   <T extends Operations>(
-    factory: (context: WorkerContext) => WorkerContract<T>
+    factory: (context: WorkerContext) => WorkerContract<T>,
   ): WorkerContract<T> => {
     const context: WorkerContext = {
       createClientRep,
@@ -75,11 +75,11 @@ export const createWorkerFactory =
   };
 
 export type WorkerFactory<T extends Operations> = (
-  context: WorkerContext
+  context: WorkerContext,
 ) => WorkerContract<T>;
 
 export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
-  context
+  context,
 ) => {
   const { clients, createClientRep } = context;
   return {
@@ -106,7 +106,7 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
 };
 
 export const createWorker = <T extends Operations>(
-  factory: WorkerFactory<T>
+  factory: WorkerFactory<T>,
 ) => {
   const clients = getDefaultClients();
   const create = createWorkerFactory(clients);
