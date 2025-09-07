@@ -14,12 +14,12 @@ const [useEcho] = bind(
           const unsubscribePromise = client.subscribeEcho(
             Comlink.proxy((message) => {
               subscriber.next(message);
-            })
+            }),
           );
           return () => unsubscribePromise.then((unsubscribe) => unsubscribe());
-        })
-    )
-  )
+        }),
+    ),
+  ),
 );
 
 const sendEcho = async (message: string) => {

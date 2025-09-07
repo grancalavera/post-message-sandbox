@@ -13,18 +13,18 @@ type ClientRepMap = Map<string, ClientRep>;
 export type WorkerContext = {
   clients: ClientRepMap;
   createNotifier: <T>(
-    source$: Subject<T> | BehaviorSubject<T>
+    source$: Subject<T> | BehaviorSubject<T>,
   ) => (value: T) => T;
   createSubscriber: <T>(
-    source$: Observable<T>
+    source$: Observable<T>,
   ) => (
     clientId: string,
-    callback: ProxyMarkedFunction<(value: T) => void>
+    callback: ProxyMarkedFunction<(value: T) => void>,
   ) => ProxyMarkedFunction<() => void>;
 };
 
 type WorkerFactory<T extends Operations> = (
-  context: WorkerContext
+  context: WorkerContext,
 ) => WorkerContract<T>;
 type MakeNotifier = WorkerContext["createNotifier"];
 type MakeSubscriber = WorkerContext["createSubscriber"];
@@ -48,7 +48,7 @@ const createSubscriberMaker =
   <T>(source$: Observable<T>) =>
   (
     clientId: string,
-    callback: ProxyMarkedFunction<(value: T) => void>
+    callback: ProxyMarkedFunction<(value: T) => void>,
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
@@ -92,7 +92,7 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = ({
 });
 
 export type CreateWorker = <T extends Operations>(
-  factory: WorkerFactory<T>
+  factory: WorkerFactory<T>,
 ) => WorkerContract<T>;
 
 export const createWorkerMaker =

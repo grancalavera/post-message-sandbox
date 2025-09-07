@@ -144,3 +144,11 @@ export type WorkerContract<T extends Operations> = {
 export type WorkerProxy<T extends Operations> = Comlink.Remote<
   WorkerContract<T>
 >;
+
+/**
+ * Creates a Comlink remote proxy for the given worker contract using the provided MessagePort.
+ * @param port The MessagePort to communicate with the worker.
+ * @returns A Comlink remote proxy for the worker contract.
+ */
+export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
+  Comlink.wrap<WorkerContract<T>>(port);

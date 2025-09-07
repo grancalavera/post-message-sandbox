@@ -15,7 +15,7 @@ export class EchoWorker extends BaseWorker implements EchoWorkerContract {
 
   subscribeEcho(
     clientId: string,
-    callback: (message: string) => void
+    callback: (message: string) => void,
   ): Promise<() => void> {
     console.log("subscribeEcho", clientId);
     return this.subscribe(clientId, callback, this.echo$);

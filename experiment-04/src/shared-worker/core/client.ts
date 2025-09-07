@@ -1,20 +1,21 @@
 import * as Comlink from "comlink";
 import type { RegistryContract } from "./contract";
-import type { Operations, WorkerContract, WorkerProxy } from "./model";
+import { wrapWorkerPort, type Operations } from "./model";
 
 export interface CreateClientOptions {
   sharedWorker: SharedWorker;
-  generateClientId?: () => string;
+  clientId?: string;
 }
 
 const registerClient = async (
-  workerProxy: WorkerProxy<RegistryContract>,
-  clientId: string
+  port: MessagePort,
+  clientId: string,
 ): Promise<void> => {
   const registration = Promise.withResolvers<void>();
 
   navigator.locks.request(clientId, async () => {
-    await workerProxy.registerClient(clientId);
+    const proxy = wrapWorkerPort<RegistryContract>(port);
+    await proxy.registerClient(clientId);
     registration.resolve();
     return new Promise(() => {});
   });
@@ -23,44 +24,35 @@ const registerClient = async (
 };
 
 const deriveClient = <T extends Operations>(
-  workerProxy: WorkerProxy<T>,
-  clientId: string
+  port: MessagePort,
+  clientId: string,
 ): T => {
+  const workerProxy = wrapWorkerPort<T>(port);
   const clientProxy = new Proxy(workerProxy, {
-    get(target, prop, receiver) {
-      const value = Reflect.get(target, prop, receiver);
+    get(target, propertyKey, receiver) {
+      const property = Reflect.get(target, propertyKey, receiver);
 
-      if (typeof value === "function") {
+      if (typeof property !== "function") return property;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (...args: any[]) => {
+        const processedArgs = args.map((arg) =>
+          typeof arg === "function" ? Comlink.proxy(arg) : arg,
+        );
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return function (...args: any[]) {
-          const processedArgs = args.map((arg) =>
-            typeof arg === "function" ? Comlink.proxy(arg) : arg
-          );
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return (value as any)(...[clientId, ...processedArgs]);
-        };
-      }
-
-      return value;
+        return (property as any)(...[clientId, ...processedArgs]);
+      };
     },
   }) as T;
 
   return clientProxy;
 };
 
-export const createClient = async <T extends Operations>(
-  options: CreateClientOptions
-): Promise<T> => {
-  const { sharedWorker, generateClientId = () => crypto.randomUUID() } =
-    options;
-
-  const clientId = generateClientId();
-
-  await registerClient(Comlink.wrap(sharedWorker.port), clientId);
-
-  return deriveClient<T>(
-    Comlink.wrap<WorkerContract<T>>(sharedWorker.port),
-    clientId
-  );
+export const createClient = async <T extends Operations>({
+  sharedWorker: { port },
+  clientId = crypto.randomUUID(),
+}: CreateClientOptions): Promise<T> => {
+  await registerClient(port, clientId);
+  return deriveClient<T>(port, clientId);
 };

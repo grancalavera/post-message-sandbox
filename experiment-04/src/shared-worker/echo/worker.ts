@@ -20,7 +20,7 @@ const echo$ = new Subject<string>();
 const subscribe = <T>(
   source$: Observable<T>,
   clientId: string,
-  callback: (value: T) => void
+  callback: (value: T) => void,
 ): ProxyMarkedFunction<() => void> => {
   const client = clients.get(clientId);
 

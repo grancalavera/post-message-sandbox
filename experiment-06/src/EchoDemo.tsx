@@ -17,8 +17,8 @@ const messages$ = from(getEchoClientOne()).pipe(
             unsubscribe();
           });
         };
-      })
-  )
+      }),
+  ),
 );
 
 messages$.subscribe((message) => {
@@ -65,7 +65,7 @@ export function EchoDemo() {
               `${new Date().toLocaleTimeString()}: ${message}`,
               ...prev.slice(0, 9),
             ]);
-          }
+          },
         );
         setUnsubscribe(() => unsubscribe);
       } catch (error) {
