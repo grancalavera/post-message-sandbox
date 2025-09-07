@@ -7,6 +7,15 @@ interface ClientRep {
   subscriptions: Subscription;
 }
 
+interface WorkerContext {
+  getClient: (clientId: string) => ClientRep;
+  subscribe<T>(
+    clientId: string,
+    source$: Observable<T>,
+    callback: (value: T) => void
+  ): Promise<ProxyMarkedFunction<() => void>>;
+}
+
 const createClientRep = (clientId: string): ClientRep => ({
   clientId,
   subscriptions: new Subscription(),
@@ -37,6 +46,7 @@ export abstract class BaseWorker {
     callback: (value: T) => void,
     source$: Observable<T>
   ): Promise<ProxyMarkedFunction<() => void>> {
+    console.log("unsubscribe", clientId);
     const client = this.getClient(clientId);
     const subscription = source$.subscribe(callback);
     client.subscriptions.add(subscription);

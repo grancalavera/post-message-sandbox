@@ -30,7 +30,7 @@ function createClient(target: WorkerApi): ClientApi {
         return function (...args: unknown[]) {
           // Process args to wrap functions in Comlink proxies
           const processedArgs = args.map((arg) =>
-            typeof arg === "function" ? Comlink.proxy(arg) : arg
+            typeof arg === "function" ? Comlink.proxy(arg) : arg,
           );
 
           // Inject proxyId as first argument
@@ -49,7 +49,7 @@ export const proxy = createClient(target);
 console.log("=== Direct internal API calls ===");
 console.log(
   "target.multiplyByTwo('manual-id', 5):",
-  target.multiplyByTwo("manual-id", 5)
+  target.multiplyByTwo("manual-id", 5),
 );
 console.log("target.someProperty:", target.someProperty);
 

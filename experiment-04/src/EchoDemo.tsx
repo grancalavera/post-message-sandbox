@@ -45,7 +45,7 @@ export function EchoDemo({ echoClient }: EchoDemoProps) {
               `${new Date().toLocaleTimeString()}: ${message}`,
               ...prev.slice(0, 9),
             ]);
-          }
+          },
         );
         setUnsubscribe(() => unsubscribe);
       } catch (error) {

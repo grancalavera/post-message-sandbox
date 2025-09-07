@@ -17,9 +17,6 @@ export class EchoClient
   async subscribeEcho(
     callback: (message: string) => void,
   ): Promise<() => void> {
-    return this.proxy.subscribeEcho(
-      this.clientId,
-      Comlink.proxy(callback),
-    );
+    return this.proxy.subscribeEcho(this.clientId, Comlink.proxy(callback));
   }
 }

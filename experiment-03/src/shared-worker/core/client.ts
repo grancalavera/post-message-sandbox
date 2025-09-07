@@ -12,7 +12,7 @@ export interface CreateClientOptions<TContract> {
 
 export type ClientConstructor<TContract> = new (
   port: MessagePort,
-  clientId: string
+  clientId: string,
 ) => TContract;
 
 export abstract class WorkerProxy<T> {
@@ -64,7 +64,7 @@ class RegistryClient
 }
 
 export const createClient = async <T>(
-  options: CreateClientOptions<T>
+  options: CreateClientOptions<T>,
 ): Promise<T> => {
   const {
     worker,
