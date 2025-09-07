@@ -16,6 +16,7 @@ const registerClient = async (
   navigator.locks.request(clientId, async () => {
     await workerProxy.registerClient(clientId);
     registration.resolve();
+    a;
     return new Promise(() => {});
   });
 
