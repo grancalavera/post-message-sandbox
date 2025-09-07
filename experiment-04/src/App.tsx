@@ -63,12 +63,7 @@ function App() {
 
 const EchoSubscription = () => {
   const echo = useEcho();
-  return (
-    <div>
-      <h4>Echo Subscription</h4>
-      <pre>{JSON.stringify(echo, null, 2)}</pre>
-    </div>
-  );
+  return <p>{echo}</p>;
 };
 
 export default App;

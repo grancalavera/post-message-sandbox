@@ -16,7 +16,6 @@ const registerClient = async (
   navigator.locks.request(clientId, async () => {
     await workerProxy.registerClient(clientId);
     registration.resolve();
-    a;
     return new Promise(() => {});
   });
 
@@ -26,33 +25,29 @@ const registerClient = async (
 const deriveClient = <T extends Operations>(
   workerProxy: WorkerProxy<T>,
   clientId: string
-): T =>
-  new Proxy(workerProxy, {
+): T => {
+  const clientProxy = new Proxy(workerProxy, {
     get(target, prop, receiver) {
-      console.log("[get]", { clientId, target, prop, receiver });
-
       const value = Reflect.get(target, prop, receiver);
-      console.log(typeof value);
 
       if (typeof value === "function") {
-        console.log('intercept function call for prop "', String(prop), '"');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return function (...args: any[]) {
-          // const processedArgs = args.map((arg) => {
-          //   if (typeof arg === "function") {
-          //     console.log("intercept function argument", String(arg));
-          //     return Comlink.proxy(arg);
-          //   } else {
-          //     return arg;
-          //   }
-          // });
-          return value.apply(target, [clientId, ...args]);
+          const processedArgs = args.map((arg) =>
+            typeof arg === "function" ? Comlink.proxy(arg) : arg
+          );
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return (value as any)(...[clientId, ...processedArgs]);
         };
       }
 
       return value;
     },
   }) as T;
+
+  return clientProxy;
+};
 
 export const createClient = async <T extends Operations>(
   options: CreateClientOptions
