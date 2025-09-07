@@ -8,47 +8,39 @@ interface ClientRep {
   subscriptions: Subscription;
 }
 
-type ClientRepMap = Map<string, ClientRep>;
-
-export type WorkerContext = {
-  clients: ClientRepMap;
-  createNotifier: <T>(
-    source$: Subject<T> | BehaviorSubject<T>,
-  ) => (value: T) => T;
-  createSubscriber: <T>(
-    source$: Observable<T>,
-  ) => (
-    clientId: string,
-    callback: ProxyMarkedFunction<(value: T) => void>,
-  ) => ProxyMarkedFunction<() => void>;
-};
-
-type WorkerFactory<T extends Operations> = (
-  context: WorkerContext,
-) => WorkerContract<T>;
-type MakeNotifier = WorkerContext["createNotifier"];
-type MakeSubscriber = WorkerContext["createSubscriber"];
-
-export const createClientRep = (clientId: string): ClientRep => ({
+const createClientRep = (clientId: string): ClientRep => ({
   clientId,
   subscriptions: new Subscription(),
 });
 
-export const createNotifier: MakeNotifier =
-  <T>(source$: Subject<T> | BehaviorSubject<T>) =>
-  (value: T): T => {
-    if (source$.observed) {
-      source$.next(value);
-    }
-    return value;
-  };
+type ClientRepMap = Map<string, ClientRep>;
 
-const createSubscriberMaker =
-  (clients: ClientRepMap): MakeSubscriber =>
-  <T>(source$: Observable<T>) =>
-  (
+export const getDefaultClients = (): ClientRepMap => new Map();
+
+export type WorkerContext = {
+  notify: <T>(source$: Subject<T> | BehaviorSubject<T>, value: T) => T;
+  subscribe: <T>(
+    source$: Observable<T>,
     clientId: string,
-    callback: ProxyMarkedFunction<(value: T) => void>,
+    callback: (value: T) => void
+  ) => ProxyMarkedFunction<() => void>;
+  createClientRep: (clientId: string) => ClientRep;
+  clients: ClientRepMap;
+};
+
+const notify = <T>(source$: Subject<T> | BehaviorSubject<T>, value: T): T => {
+  if (source$.observed) {
+    source$.next(value);
+  }
+  return value;
+};
+
+const subscribe =
+  (clients: ClientRepMap) =>
+  <T>(
+    source$: Observable<T>,
+    clientId: string,
+    callback: (value: T) => void
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
@@ -67,48 +59,56 @@ const createSubscriberMaker =
     });
   };
 
-export const registryWorkerFactory: WorkerFactory<RegistryContract> = ({
-  clients,
-}) => ({
-  async registerClient(clientId) {
-    if (clients.has(clientId)) {
-      return;
-    }
+export const createWorkerFactory =
+  (clients: ClientRepMap) =>
+  <T extends Operations>(
+    factory: (context: WorkerContext) => WorkerContract<T>
+  ): WorkerContract<T> => {
+    const context: WorkerContext = {
+      createClientRep,
+      notify,
+      subscribe: subscribe(clients),
+      clients,
+    };
 
-    console.log("registerClient", clientId);
-    clients.set(clientId, createClientRep(clientId));
+    return factory(context);
+  };
 
-    navigator.locks.request(clientId, async () => {
-      console.log("unregister client", clientId);
-      const client = clients.get(clientId);
-      if (!client) {
-        console.warn(`Attempted to unregister unknown client ${clientId}`);
-        return;
-      }
-      client.subscriptions.unsubscribe();
-      clients.delete(clientId);
-    });
-  },
-});
-
-export type CreateWorker = <T extends Operations>(
-  factory: WorkerFactory<T>,
+export type WorkerFactory<T extends Operations> = (
+  context: WorkerContext
 ) => WorkerContract<T>;
 
-export const createWorkerMaker =
-  (clients: ClientRepMap): CreateWorker =>
-  (factory) =>
-    factory({
-      clients,
-      createNotifier,
-      createSubscriber: createSubscriberMaker(clients),
-    });
+export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
+  context
+) => {
+  const { clients, createClientRep } = context;
+  return {
+    async registerClient(clientId) {
+      if (clients.has(clientId)) {
+        return;
+      }
 
-export const createWorker: CreateWorker = (factory) => {
-  const create = createWorkerMaker(new Map());
+      console.log("registerClient", clientId);
+      clients.set(clientId, createClientRep(clientId));
 
-  const registryWorker = create(registryWorkerFactory);
-  const worker = create(factory);
+      navigator.locks.request(clientId, async () => {
+        console.log("unregister client", clientId);
+        const client = clients.get(clientId);
+        if (!client) {
+          console.warn(`Attempted to unregister unknown client ${clientId}`);
+          return;
+        }
+        client.subscriptions.unsubscribe();
+        clients.delete(clientId);
+      });
+    },
+  };
+};
 
-  return { ...worker, ...registryWorker };
+export const createWorker = <T extends Operations>(
+  factory: WorkerFactory<T>
+) => {
+  const clients = getDefaultClients();
+  const create = createWorkerFactory(clients);
+  return { ...create(factory), ...create(registryWorkerFactory) };
 };
