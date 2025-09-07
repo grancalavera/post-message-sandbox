@@ -19,6 +19,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@react-rxjs/core": "0.10.8",
+    "@react-rxjs/utils": "0.9.7",
     "comlink": "4.4.2",
     "lodash": "4.17.21",
     "react": "19.1.1",

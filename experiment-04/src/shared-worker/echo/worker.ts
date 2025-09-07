@@ -20,7 +20,7 @@ const echo$ = new Subject<string>();
 const subscribe = <T>(
   source$: Observable<T>,
   clientId: string,
-  callback: ProxyMarkedFunction<(value: T) => void>
+  callback: (value: T) => void
 ): ProxyMarkedFunction<() => void> => {
   const client = clients.get(clientId);
 
@@ -69,7 +69,8 @@ export const registryWorker: WorkerContract<RegistryContract> = {
 };
 
 export const echoWorker: WorkerContract<EchoContract> = {
-  async echo(clientId, message) {
+  async echo(clientId, value) {
+    const message = `[${new Date().toISOString()}, ${clientId}] ${value}`;
     console.log("echo", { clientId, message });
     return notify(echo$, message);
   },

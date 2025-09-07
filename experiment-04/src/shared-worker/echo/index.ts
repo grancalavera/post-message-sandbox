@@ -9,10 +9,7 @@ export const createEchoClient = memoize((name: string = "Echo Client") => {
       {
         type: "module",
         name,
-      },
+      }
     ),
   });
 });
-
-export const getEchoClientOne = () => createEchoClient("Echo One");
-export const getEchoClientTwo = () => createEchoClient("Echo Two");

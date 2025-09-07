@@ -129,10 +129,7 @@ export type WorkerContract<T extends Operations> = {
   [K in keyof T]: T[K] extends Subscription<infer Args, infer Update>
     ? (
         clientId: string,
-        ...args: [
-          ...ArgsToParams<Args>,
-          callback: ProxyMarkedFunction<(value: Update) => void>,
-        ]
+        ...args: [...ArgsToParams<Args>, callback: (value: Update) => void]
       ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
       ? (clientId: string, ...args: Args) => Return
