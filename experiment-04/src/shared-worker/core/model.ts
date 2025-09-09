@@ -247,5 +247,5 @@ export const subscribeTo = <T extends Operations>(key: SubscriptionKey<T>) =>
 
 export const fromClient = <T extends Operations>(
   client: Promise<T>,
-  key: SubscriptionKey<T>
+  key: SubscriptionKey<T>,
 ) => from(client).pipe(subscribeTo(key));
