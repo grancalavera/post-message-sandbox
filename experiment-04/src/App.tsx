@@ -1,17 +1,10 @@
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import { from } from "rxjs";
-import { subscribeTo } from "./shared-worker/core/model";
 import * as echo from "./shared-worker/echo";
 
 const [useEcho] = bind((timestamp?: boolean) =>
-  from(echo.getClient()).pipe(subscribeTo("subscribeEcho", { timestamp })),
+  echo.subscribe("subscribeEcho", { timestamp }),
 );
-
-const sendEcho = async (message: string) => {
-  const client = await echo.getClient();
-  return client.echo(message);
-};
 
 function App() {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -28,7 +21,10 @@ function App() {
         <button
           onClick={async () => {
             setCount((i) => i + 1);
-            const response = await sendEcho(`Hello World! [${count}]`);
+            const response = await echo.mutate(
+              "echo",
+              `Hello World! [${count}]`,
+            );
             setEchoResponse(response);
           }}
         >
