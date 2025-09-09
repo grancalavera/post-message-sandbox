@@ -54,7 +54,7 @@ This experiment implements an abstraction layer for SharedWorker communication u
 ```typescript
 export type EchoContract = Contract<{
   echo: Mutation<string, string>;
-  subscribeEcho: Subscription<void, string>;
+  subscribeEcho: Subscription<string, void>;
 }>;
 ```
 
