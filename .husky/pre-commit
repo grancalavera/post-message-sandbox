@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # Run type checking and linting (these should fail the commit if there are errors)
 npm run typecheck
 npm run lint

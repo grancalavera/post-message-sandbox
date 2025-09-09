@@ -6,7 +6,7 @@ export const echoWorker = createWorker<EchoContract>(
   ({ notify, subscribe }) => {
     const echo$ = new Subject<string>();
 
-    const echoTimestamp$ = echo$.pipe(
+    const echoWithTimestamp$ = echo$.pipe(
       map((message) => `[${new Date().toISOString()}] ${message}`),
       share(),
     );
@@ -21,7 +21,7 @@ export const echoWorker = createWorker<EchoContract>(
         console.log("subscribeEcho", { clientId, input });
         const timestamp = input?.timestamp;
         return subscribe(
-          timestamp ? echoTimestamp$ : echo$,
+          timestamp ? echoWithTimestamp$ : echo$,
           clientId,
           callback,
         );
