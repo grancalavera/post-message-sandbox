@@ -8,6 +8,12 @@ const [useEcho] = bind(
   from(echo.getClient()).pipe(subscribeTo("subscribeEcho")),
 );
 
+const [useEchoWithTimestamp] = bind(
+  from(echo.getClient()).pipe(
+    subscribeTo("subscribeEcho", { timestamp: true }),
+  ),
+);
+
 const sendEcho = async (message: string) => {
   const client = await echo.getClient();
   return client.echo(message);
@@ -15,6 +21,7 @@ const sendEcho = async (message: string) => {
 
 function App() {
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isTimestampSubscribed, setIsTimestampSubscribed] = useState(false);
   const [echoResponse, setEchoResponse] = useState<string>("...");
   const [count, setCount] = useState(0);
   return (
@@ -45,12 +52,29 @@ function App() {
           </Subscribe>
         )}
       </section>
+      <section>
+        <button onClick={() => setIsTimestampSubscribed((current) => !current)}>
+          {isTimestampSubscribed
+            ? "Unsubscribe Timestamp"
+            : "Subscribe with Timestamp"}
+        </button>
+        {isTimestampSubscribed && (
+          <Subscribe fallback={<p>Waiting for timestamped messages...</p>}>
+            <EchoTimestampSubscription />
+          </Subscribe>
+        )}
+      </section>
     </div>
   );
 }
 
 const EchoSubscription = () => {
   const echo = useEcho();
+  return <p>{echo}</p>;
+};
+
+const EchoTimestampSubscription = () => {
+  const echo = useEchoWithTimestamp();
   return <p>{echo}</p>;
 };
 
