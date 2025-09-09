@@ -16,6 +16,7 @@ const sendEcho = async (message: string) => {
 function App() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [echoResponse, setEchoResponse] = useState<string>("...");
+  const [count, setCount] = useState(0);
   return (
     <div>
       <h3>Shared Worker Echo Demo</h3>
@@ -25,11 +26,12 @@ function App() {
       <section>
         <button
           onClick={async () => {
-            const response = await sendEcho("Hello, World!");
+            setCount((i) => i + 1);
+            const response = await sendEcho(`Hello World! [${count}]`);
             setEchoResponse(response);
           }}
         >
-          Send Echo
+          Send Echo: next [{count}]
         </button>
         <p>Response: {echoResponse}</p>
       </section>

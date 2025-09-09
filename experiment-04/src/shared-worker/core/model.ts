@@ -59,52 +59,38 @@ export type ProxyMarkedFunction<
 > = T & Comlink.ProxyMarked;
 
 /**
- * Converts operation arguments to proper parameter format.
- * - void arguments become empty parameter array
- * - Array arguments are preserved as-is
- * - Single arguments are wrapped in an array with named parameter
- */
-type ArgsToParams<Args> = Args extends void
-  ? []
-  : Args extends readonly unknown[]
-    ? Args
-    : [value: Args];
-
-/**
  * Represents a query operation that retrieves data.
  * Returns a Promise of the response data.
  */
 export type Query<
-  Args extends StructuredCloneable = void,
   Response extends StructuredCloneable = void,
-> = {
-  (...args: ArgsToParams<Args>): Promise<Response>;
-};
+  Input extends StructuredCloneable = void,
+> = Input extends void
+  ? () => Promise<Response>
+  : (input?: Input) => Promise<Response>;
 
 /**
  * Represents a mutation operation that modifies data.
  * Returns a Promise of the operation result.
  */
 export type Mutation<
-  Args extends StructuredCloneable = void,
-  Result extends StructuredCloneable = void,
-> = {
-  (...args: ArgsToParams<Args>): Promise<Result>;
-};
+  Response extends StructuredCloneable = void,
+  Input extends StructuredCloneable = void,
+> = Input extends void
+  ? () => Promise<Response>
+  : (input?: Input) => Promise<Response>;
 
 /**
  * Represents a subscription operation that receives real-time updates.
- * Takes arguments plus a callback function for updates.
+ * Takes a callback function and optional input parameters.
  * Returns a Promise of an unsubscribe function.
  */
 export type Subscription<
-  Args extends StructuredCloneable = void,
   Update extends StructuredCloneable = void,
-> = {
-  (
-    ...args: [...ArgsToParams<Args>, callback: (value: Update) => void]
-  ): Promise<() => void>;
-};
+  Input extends StructuredCloneable = void,
+> = Input extends void
+  ? (callback: (value: Update) => void) => Promise<() => void>
+  : (callback: (value: Update) => void, input?: Input) => Promise<() => void>;
 
 /**
  * A collection of operations (queries, mutations, and subscriptions)
@@ -131,11 +117,17 @@ export type Contract<T extends Operations> = T;
  * wrapped in Promise.
  */
 export type WorkerContract<T extends Operations> = {
-  [K in keyof T]: T[K] extends Subscription<infer Args, infer Update>
-    ? (
-        clientId: string,
-        ...args: [...ArgsToParams<Args>, callback: (value: Update) => void]
-      ) => Promise<ProxyMarkedFunction<() => void>>
+  [K in keyof T]: T[K] extends Subscription<infer Update, infer Input>
+    ? Input extends void
+      ? (
+          clientId: string,
+          callback: (value: Update) => void,
+        ) => Promise<ProxyMarkedFunction<() => void>>
+      : (
+          clientId: string,
+          callback: (value: Update) => void,
+          input?: Input,
+        ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
       ? (clientId: string, ...args: Args) => Return
       : T[K];
@@ -179,30 +171,30 @@ export type SubscriptionKey<T extends Operations> = {
 }[keyof T];
 
 /**
- * Extracts the arguments type from a subscription operation, excluding the callback.
- * This utility type retrieves the Args type parameter from a Subscription type and
- * converts it to the parameter format used by the subscription function.
+ * Extracts the input type from a subscription operation.
+ * This utility type retrieves the Input type parameter from a Subscription type.
  *
  * Example:
  * ```typescript
  * interface MyOperations {
- *   watchChanges: Subscription<{ userId: string }, number>;
+ *   watchChanges: Subscription<number, { userId: string }>;
  * }
  *
- * type Args = SubscriptionArguments<MyOperations, "watchChanges">; // [value: { userId: string }]
+ * type Input = SubscriptionInput<MyOperations, "watchChanges">; // { userId: string } | undefined
  * ```
  */
-export type SubscriptionArguments<
+export type SubscriptionInput<
   T extends Operations,
   K extends SubscriptionKey<T>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-> = T[K] extends Subscription<infer Args, any> ? ArgsToParams<Args> : never;
+> = T[K] extends Subscription<any, infer Input> ? Input : never;
 
 /**
  * Creates an RxJS operator that subscribes to a specific subscription operation on a client.
  * This function bridges the gap between the callback-based subscription API and RxJS observables.
  *
  * @param key The subscription key to subscribe to (must be a valid subscription operation)
+ * @param input Optional input parameter for the subscription (if required)
  * @returns An RxJS operator that takes a client and returns an Observable of subscription updates
  *
  * Usage:
@@ -212,8 +204,8 @@ export type SubscriptionArguments<
  *
  * // Subscribe to updates from a specific subscription
  * const updates$ = client$.pipe(
- *   subscribeTo('watchChanges')
- * );a
+ *   subscribeTo('watchChanges', { userId: 'user123' })
+ * );
  *
  * updates$.subscribe(update => console.log('Received:', update));
  * ```
@@ -223,29 +215,30 @@ export type SubscriptionArguments<
  * 2. Creates an Observable that wraps the callback-based subscription
  * 3. Handles cleanup by calling the unsubscribe function when the observable is unsubscribed
  */
-
-// -----------------------------------------------------------------------------
-//
-// this gem doesn't take into account subscriptions can take arguments
-//
-// -----------------------------------------------------------------------------
-
-export const subscribeTo = <T extends Operations>(key: SubscriptionKey<T>) =>
+export const subscribeTo = <T extends Operations, K extends SubscriptionKey<T>>(
+  key: K,
+  input?: SubscriptionInput<T, K>,
+) =>
   switchMap((client: T) => {
     type U =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      T[typeof key] extends Subscription<any, infer Update> ? Update : never;
+      T[K] extends Subscription<infer Update, any> ? Update : never;
 
     return new Observable<U>((subscriber) => {
-      const unsubscribePromise = client[key]!((value: U) => {
-        subscriber.next(value);
-      });
+      const subscription = client[key] as unknown as (
+        callback: (value: U) => void,
+        input?: SubscriptionInput<T, K>,
+      ) => Promise<() => void>;
 
-      return () => unsubscribePromise.then((f) => f());
+      const callback = (value: U) => subscriber.next(value);
+      const unsubscribePromise = subscription(callback, input);
+
+      return () => unsubscribePromise.then((f: () => void) => f());
     });
   });
 
-export const fromClient = <T extends Operations>(
+export const fromClient = <T extends Operations, K extends SubscriptionKey<T>>(
   client: Promise<T>,
-  key: SubscriptionKey<T>,
-) => from(client).pipe(subscribeTo(key));
+  key: K,
+  input?: SubscriptionInput<T, K>,
+) => from(client).pipe(subscribeTo(key, input));

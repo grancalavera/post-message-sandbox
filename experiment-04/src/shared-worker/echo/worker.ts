@@ -17,8 +17,9 @@ export const echoWorker = createWorker<EchoContract>(
         console.log("echo", { clientId, message });
         return notify(echo$, message);
       },
-      async subscribeEcho(clientId, timestamp: boolean | undefined, callback) {
-        console.log("subscribeEcho", { clientId });
+      async subscribeEcho(clientId, callback, input) {
+        console.log("subscribeEcho", { clientId, input });
+        const timestamp = input?.timestamp;
         return subscribe(
           timestamp ? echoTimestamp$ : echo$,
           clientId,
