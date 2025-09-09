@@ -1,5 +1,5 @@
 import * as Comlink from "comlink";
-import { Observable, switchMap } from "rxjs";
+import { from, Observable, switchMap } from "rxjs";
 
 /**
  * Type helper that ensures only structured cloneable JavaScript types are allowed.
@@ -42,7 +42,11 @@ type StructuredCloneable =
   | Float64Array
   | BigInt64Array
   | BigUint64Array
-  | DataView;
+  | DataView
+  | StructuredCloneable[]
+  | { [key: string]: StructuredCloneable }
+  | Map<StructuredCloneable, StructuredCloneable>
+  | Set<StructuredCloneable>;
 
 /**
  * Type helper for Comlink proxy-marked functions.
@@ -175,6 +179,26 @@ export type SubscriptionKey<T extends Operations> = {
 }[keyof T];
 
 /**
+ * Extracts the arguments type from a subscription operation, excluding the callback.
+ * This utility type retrieves the Args type parameter from a Subscription type and
+ * converts it to the parameter format used by the subscription function.
+ *
+ * Example:
+ * ```typescript
+ * interface MyOperations {
+ *   watchChanges: Subscription<{ userId: string }, number>;
+ * }
+ *
+ * type Args = SubscriptionArguments<MyOperations, "watchChanges">; // [value: { userId: string }]
+ * ```
+ */
+export type SubscriptionArguments<
+  T extends Operations,
+  K extends SubscriptionKey<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> = T[K] extends Subscription<infer Args, any> ? ArgsToParams<Args> : never;
+
+/**
  * Creates an RxJS operator that subscribes to a specific subscription operation on a client.
  * This function bridges the gap between the callback-based subscription API and RxJS observables.
  *
@@ -189,7 +213,7 @@ export type SubscriptionKey<T extends Operations> = {
  * // Subscribe to updates from a specific subscription
  * const updates$ = client$.pipe(
  *   subscribeTo('watchChanges')
- * );
+ * );a
  *
  * updates$.subscribe(update => console.log('Received:', update));
  * ```
@@ -199,6 +223,13 @@ export type SubscriptionKey<T extends Operations> = {
  * 2. Creates an Observable that wraps the callback-based subscription
  * 3. Handles cleanup by calling the unsubscribe function when the observable is unsubscribed
  */
+
+// -----------------------------------------------------------------------------
+//
+// this gem doesn't take into account subscriptions can take arguments
+//
+// -----------------------------------------------------------------------------
+
 export const subscribeTo = <T extends Operations>(key: SubscriptionKey<T>) =>
   switchMap((client: T) => {
     type U =
@@ -213,3 +244,8 @@ export const subscribeTo = <T extends Operations>(key: SubscriptionKey<T>) =>
       return () => unsubscribePromise.then((f) => f());
     });
   });
+
+export const fromClient = <T extends Operations>(
+  client: Promise<T>,
+  key: SubscriptionKey<T>
+) => from(client).pipe(subscribeTo(key));

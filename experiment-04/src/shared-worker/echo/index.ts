@@ -9,7 +9,7 @@ export const getClient = memoize((name: string = "Echo Client") =>
       {
         type: "module",
         name,
-      }
+      },
     ),
-  })
+  }),
 );

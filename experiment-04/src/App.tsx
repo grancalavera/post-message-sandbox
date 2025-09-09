@@ -5,7 +5,7 @@ import { subscribeTo } from "./shared-worker/core/model";
 import * as echo from "./shared-worker/echo";
 
 const [useEcho] = bind(
-  from(echo.getClient()).pipe(subscribeTo("subscribeEcho"))
+  from(echo.getClient()).pipe(subscribeTo("subscribeEcho")),
 );
 
 const sendEcho = async (message: string) => {
