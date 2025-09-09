@@ -4,14 +4,8 @@ import { from } from "rxjs";
 import { subscribeTo } from "./shared-worker/core/model";
 import * as echo from "./shared-worker/echo";
 
-const [useEcho] = bind(
-  from(echo.getClient()).pipe(subscribeTo("subscribeEcho")),
-);
-
-const [useEchoWithTimestamp] = bind(
-  from(echo.getClient()).pipe(
-    subscribeTo("subscribeEcho", { timestamp: true }),
-  ),
+const [useEcho] = bind((timestamp?: boolean) =>
+  from(echo.getClient()).pipe(subscribeTo("subscribeEcho", { timestamp })),
 );
 
 const sendEcho = async (message: string) => {
@@ -60,7 +54,7 @@ function App() {
         </button>
         {isTimestampSubscribed && (
           <Subscribe fallback={<p>Waiting for timestamped messages...</p>}>
-            <EchoTimestampSubscription />
+            <EchoSubscription timestamp={true} />
           </Subscribe>
         )}
       </section>
@@ -68,13 +62,8 @@ function App() {
   );
 }
 
-const EchoSubscription = () => {
-  const echo = useEcho();
-  return <p>{echo}</p>;
-};
-
-const EchoTimestampSubscription = () => {
-  const echo = useEchoWithTimestamp();
+const EchoSubscription = ({ timestamp = false }: { timestamp?: boolean }) => {
+  const echo = useEcho(timestamp);
   return <p>{echo}</p>;
 };
 
