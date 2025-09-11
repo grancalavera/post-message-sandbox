@@ -1,6 +1,6 @@
 import * as Comlink from "comlink";
 import type { RegistryContract } from "./contract";
-import { wrapWorkerPort, type Operations } from "./model";
+import { subscriptions, wrapWorkerPort, type Operations } from "./model";
 
 export interface CreateClientOptions {
   sharedWorker: SharedWorker;
@@ -52,8 +52,9 @@ const deriveClient = <T extends Operations>(
 export const createClient = <T extends Operations>({
   sharedWorker,
   clientId = crypto.randomUUID(),
-}: CreateClientOptions): T => {
+}: CreateClientOptions) => {
   const { port } = sharedWorker;
   registerClient(port, clientId);
-  return deriveClient<T>(port, clientId);
+  const client = deriveClient<T>(port, clientId);
+  return [client, subscriptions(client)] as const;
 };
