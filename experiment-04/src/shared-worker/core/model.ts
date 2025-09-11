@@ -1,5 +1,5 @@
 import * as Comlink from "comlink";
-import { from, Observable, switchMap } from "rxjs";
+import { Observable } from "rxjs";
 
 /**
  * Type helper that ensures only structured cloneable JavaScript types are allowed.
@@ -286,24 +286,21 @@ export const mutations =
     });
 
 export const subscriptions =
-  <T extends Operations>(client: Promise<T>) =>
-  <K extends SubscriptionKey<T>>(key: K, input?: SubscriptionInput<T, K>) =>
-    from(client).pipe(
-      switchMap((client: T) => {
-        type U =
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          T[K] extends Subscription<infer Update, any> ? Update : never;
+  <T extends Operations>(client: T) =>
+  <K extends SubscriptionKey<T>>(key: K, input?: SubscriptionInput<T, K>) => {
+    type U =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      T[K] extends Subscription<infer Update, any> ? Update : never;
 
-        return new Observable<U>((subscriber) => {
-          const subscription = client[key] as unknown as (
-            callback: (value: U) => void,
-            input?: SubscriptionInput<T, K>,
-          ) => Promise<() => void>;
+    return new Observable<U>((subscriber) => {
+      const subscription = client[key] as unknown as (
+        callback: (value: U) => void,
+        input?: SubscriptionInput<T, K>,
+      ) => Promise<() => void>;
 
-          const callback = (value: U) => subscriber.next(value);
-          const unsubscribePromise = subscription(callback, input);
+      const callback = (value: U) => subscriber.next(value);
+      const unsubscribePromise = subscription(callback, input);
 
-          return () => unsubscribePromise.then((f: () => void) => f());
-        });
-      }),
-    );
+      return () => unsubscribePromise.then((f: () => void) => f());
+    });
+  };

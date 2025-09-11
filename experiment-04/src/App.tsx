@@ -1,9 +1,9 @@
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import * as echo from "./shared-worker/echo";
+import { echoClient, subscribe } from "./shared-worker/echo";
 
 const [useEcho] = bind((timestamp?: boolean) =>
-  echo.subscribe("subscribeEcho", { timestamp }),
+  subscribe("subscribeEcho", { timestamp }),
 );
 
 function App() {
@@ -21,10 +21,7 @@ function App() {
         <button
           onClick={async () => {
             setCount((i) => i + 1);
-            const response = await echo.mutate(
-              "echo",
-              `Hello World! [${count}]`,
-            );
+            const response = await echoClient.echo(`Hello World! [${count}]`);
             setEchoResponse(response);
           }}
         >

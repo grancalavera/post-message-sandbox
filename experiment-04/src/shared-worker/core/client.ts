@@ -49,10 +49,11 @@ const deriveClient = <T extends Operations>(
   return clientProxy;
 };
 
-export const createClient = async <T extends Operations>({
-  sharedWorker: { port },
+export const createClient = <T extends Operations>({
+  sharedWorker,
   clientId = crypto.randomUUID(),
-}: CreateClientOptions): Promise<T> => {
-  await registerClient(port, clientId);
+}: CreateClientOptions): T => {
+  const { port } = sharedWorker;
+  registerClient(port, clientId);
   return deriveClient<T>(port, clientId);
 };
