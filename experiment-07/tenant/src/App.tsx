@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { VaultClient } from "../../src/shared-worker/vault";
-import { createClient } from "../../src/shared-worker/core/client";
+import { createVaultClient } from "../../src/shared-worker/vault";
 
 interface HandshakeMessage {
   type: string;
@@ -26,15 +25,10 @@ function App() {
           name: event.data.workerName,
         });
 
-        const worker = new SharedWorker(event.data.workerUrl, {
-          type: "module",
-          name: event.data.workerName,
-        });
-
-        const client = await createClient({
-          worker,
-          Client: VaultClient,
-        });
+        const client = await createVaultClient(
+          event.data.workerUrl,
+          event.data.workerName,
+        );
 
         const retrievedSecret = await client.getSecret();
         console.log("[Tenant] Retrieved secret:", retrievedSecret);

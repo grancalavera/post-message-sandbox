@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { VaultClient } from "./shared-worker/vault";
-import { createClient } from "./shared-worker/core/client";
+import {
+  createVaultClientDefault,
+  VAULT_WORKER_URL,
+  VAULT_WORKER_NAME,
+} from "./shared-worker/vault";
 
 function App() {
   const [workerUrl, setWorkerUrl] = useState<string>("");
@@ -9,34 +12,20 @@ function App() {
 
   useEffect(() => {
     const initializeWorker = async () => {
-      const workerScript = new URL(
-        "./shared-worker/vault/worker-runtime.ts",
-        import.meta.url,
-      );
-      const workerName = "vault-worker";
-
-      const worker = new SharedWorker(workerScript, {
-        type: "module",
-        name: workerName,
-      });
-
-      const client = await createClient({
-        worker,
-        Client: VaultClient,
-      });
+      const client = await createVaultClientDefault();
 
       await client.setSecret("My Secret Message");
       setSecretSet(true);
 
-      setWorkerUrl(workerScript.href);
+      setWorkerUrl(VAULT_WORKER_URL);
 
       setTimeout(() => {
         if (iframeRef.current?.contentWindow) {
           iframeRef.current.contentWindow.postMessage(
             {
               type: "worker-handshake",
-              workerUrl: workerScript.href,
-              workerName: workerName,
+              workerUrl: VAULT_WORKER_URL,
+              workerName: VAULT_WORKER_NAME,
             },
             "*",
           );
