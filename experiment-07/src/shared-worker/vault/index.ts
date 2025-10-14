@@ -1,5 +1,5 @@
 import { createVaultClientFromWorker } from "./client";
-import WorkerUrl from "./worker-runtime.ts?url";
+import WorkerUrl from "./worker-runtime.ts?sharedworker&url";
 
 export const VAULT_WORKER_URL = WorkerUrl;
 export const VAULT_WORKER_NAME = "vault-worker";
