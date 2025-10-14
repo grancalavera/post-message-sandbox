@@ -1,3 +1,5 @@
+import * as Comlink from "comlink";
+
 interface WorkerApi {
   multiplyByTwo: (clientId: string, num: number) => number;
   someProperty: string;
@@ -8,7 +10,7 @@ interface ClientApi {
   someProperty: string;
 }
 
-const target: WorkerApi = {
+export const target: WorkerApi = {
   multiplyByTwo: (clientId: string, num: number) => {
     console.log(`Internal API called with proxyId: ${clientId}`);
     return num * 2;
@@ -26,8 +28,13 @@ function createClient(target: WorkerApi): ClientApi {
 
       if (typeof value === "function") {
         return function (...args: unknown[]) {
+          // Process args to wrap functions in Comlink proxies
+          const processedArgs = args.map((arg) =>
+            typeof arg === "function" ? Comlink.proxy(arg) : arg,
+          );
+
           // Inject proxyId as first argument
-          return value.apply(target, [clientId, ...args]);
+          return value.apply(target, [clientId, ...processedArgs]);
         };
       }
 
@@ -36,13 +43,13 @@ function createClient(target: WorkerApi): ClientApi {
   }) as unknown as ClientApi;
 }
 
-const proxy = createClient(target);
+export const proxy = createClient(target);
 
 // Demo usage
 console.log("=== Direct internal API calls ===");
 console.log(
   "target.multiplyByTwo('manual-id', 5):",
-  target.multiplyByTwo("manual-id", 5)
+  target.multiplyByTwo("manual-id", 5),
 );
 console.log("target.someProperty:", target.someProperty);
 
