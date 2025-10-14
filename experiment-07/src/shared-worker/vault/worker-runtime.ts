@@ -1,3 +1,3 @@
-import { createSharedWorkerRuntime } from "../core/runtime";
-import { VaultWorker } from "./worker";
-createSharedWorkerRuntime(new VaultWorker());
+import { createSharedWorkerRuntime } from "@grancalavera/bridge";
+import { vaultWorker } from "./worker";
+createSharedWorkerRuntime(vaultWorker);

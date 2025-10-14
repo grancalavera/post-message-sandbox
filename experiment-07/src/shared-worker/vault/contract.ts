@@ -1,9 +1,6 @@
-import type { Contract, Mutation } from "../core/types";
+import type { Contract, Mutation } from "@grancalavera/bridge";
 
-type VaultContract = Contract<{
-  setSecret: Mutation<string, void>;
-  getSecret: Mutation<void, string>;
+export type VaultContract = Contract<{
+  setSecret: Mutation<void, string>;
+  getSecret: Mutation<string, void>;
 }>;
-
-export type VaultWorkerContract = VaultContract["worker"];
-export type VaultClientContract = VaultContract["client"];

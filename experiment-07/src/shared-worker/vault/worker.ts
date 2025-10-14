@@ -1,16 +1,17 @@
-import { BaseWorker } from "../core/worker";
-import type { VaultWorkerContract } from "./contract";
+import { createWorker } from "@grancalavera/bridge";
+import type { VaultContract } from "./contract";
 
-export class VaultWorker extends BaseWorker implements VaultWorkerContract {
-  private secretMessage: string = "";
+export const vaultWorker = createWorker<VaultContract>(() => {
+  let secretMessage = "";
 
-  async setSecret(clientId: string, secret: string): Promise<void> {
-    this.secretMessage = secret;
-    console.log(`[VaultWorker] Secret set by client ${clientId}`);
-  }
-
-  async getSecret(clientId: string): Promise<string> {
-    console.log(`[VaultWorker] Secret retrieved by client ${clientId}`);
-    return this.secretMessage;
-  }
-}
+  return {
+    async setSecret(clientId, secret) {
+      secretMessage = secret ?? "";
+      console.log(`[VaultWorker] Secret set by client ${clientId}`);
+    },
+    async getSecret(clientId) {
+      console.log(`[VaultWorker] Secret retrieved by client ${clientId}`);
+      return secretMessage;
+    },
+  };
+});

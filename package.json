@@ -19,6 +19,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@grancalavera/bridge": "0.4.0",
     "@react-rxjs/core": "0.10.8",
     "@react-rxjs/utils": "0.9.7",
     "comlink": "4.4.2",

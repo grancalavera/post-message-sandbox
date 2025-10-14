@@ -1,19 +1,7 @@
-import { WorkerProxy } from "../core/client";
-import type { VaultClientContract, VaultWorkerContract } from "./contract";
+import { createClient } from "@grancalavera/bridge";
+import type { VaultContract } from "./contract";
 
-export class VaultClient
-  extends WorkerProxy<VaultWorkerContract>
-  implements VaultClientContract
-{
-  constructor(port: MessagePort, clientId: string) {
-    super(port, clientId);
-  }
-
-  setSecret(secret: string): Promise<void> {
-    return this.proxy.setSecret(this.clientId, secret);
-  }
-
-  getSecret(): Promise<string> {
-    return this.proxy.getSecret(this.clientId);
-  }
-}
+export const createVaultClientFromWorker = (sharedWorker: SharedWorker) => {
+  const [client] = createClient<VaultContract>({ sharedWorker });
+  return client;
+};
