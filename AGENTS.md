@@ -14,6 +14,7 @@ Always use neutral language and just leave instructions, we don't care if an exp
   - `BroadcastChannel` API
   - Window-to-window communication via `postMessage`
   - ServiceWorker messaging
+- Always use Mermaid for diagrams in README files
 
 ## Experiment Structure
 
