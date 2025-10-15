@@ -19,18 +19,30 @@ function App() {
     initializeWorker();
   }, []);
 
-  const handleIframeLoad = () => {
-    if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        {
-          type: "worker-handshake",
-          workerUrl: VAULT_WORKER_URL,
-          workerName: VAULT_WORKER_NAME,
-        },
-        "*",
-      );
-    }
-  };
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        event.data.type === "worker-request" &&
+        iframeRef.current?.contentWindow === event.source
+      ) {
+        console.log("[Host] Received worker request from tenant");
+        const contentWindow = iframeRef.current.contentWindow;
+        if (contentWindow) {
+          contentWindow.postMessage(
+            {
+              type: "worker-handshake",
+              workerUrl: VAULT_WORKER_URL,
+              workerName: VAULT_WORKER_NAME,
+            },
+            "*",
+          );
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   return (
     <section>
@@ -45,7 +57,6 @@ function App() {
         <iframe
           ref={iframeRef}
           src="/experiment-07/tenant/"
-          onLoad={handleIframeLoad}
           style={{
             width: "100%",
             height: "300px",

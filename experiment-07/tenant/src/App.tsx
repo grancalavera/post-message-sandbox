@@ -16,6 +16,11 @@ function App() {
   } | null>(null);
 
   useEffect(() => {
+    console.log("[Tenant] Sending worker request to parent");
+    window.parent.postMessage({ type: "worker-request" }, "*");
+  }, []);
+
+  useEffect(() => {
     const handleMessage = async (event: MessageEvent<HandshakeMessage>) => {
       if (event.data.type === "worker-handshake") {
         console.log("[Tenant] Received handshake:", event.data);
