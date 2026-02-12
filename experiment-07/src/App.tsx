@@ -1,0 +1,72 @@
+import { useEffect, useRef, useState } from "react";
+import {
+  createVaultClientDefault,
+  VAULT_WORKER_URL,
+  VAULT_WORKER_NAME,
+} from "./shared-worker/vault";
+
+function App() {
+  const [secretSet, setSecretSet] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const initializeWorker = async () => {
+      const client = await createVaultClientDefault();
+      await client.setSecret("My Secret Message");
+      setSecretSet(true);
+    };
+
+    initializeWorker();
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        event.data.type === "worker-request" &&
+        iframeRef.current?.contentWindow === event.source
+      ) {
+        console.log("[Host] Received worker request from tenant");
+        const contentWindow = iframeRef.current.contentWindow;
+        if (contentWindow) {
+          contentWindow.postMessage(
+            {
+              type: "worker-handshake",
+              workerUrl: VAULT_WORKER_URL,
+              workerName: VAULT_WORKER_NAME,
+            },
+            "*",
+          );
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  return (
+    <section>
+      <h1>experiment-07: Handshakes</h1>
+      <div>
+        <h2>Host Application</h2>
+        <p>Worker URL: {VAULT_WORKER_URL}</p>
+        <p>Secret set in worker: {secretSet ? "✓" : "..."}</p>
+      </div>
+      <div style={{ marginTop: "2rem" }}>
+        <h2>Tenant Application (iframe)</h2>
+        <iframe
+          ref={iframeRef}
+          src="/experiment-07/tenant/"
+          style={{
+            width: "100%",
+            height: "300px",
+            border: "2px solid #ccc",
+            borderRadius: "4px",
+          }}
+        />
+      </div>
+    </section>
+  );
+}
+
+export default App;
